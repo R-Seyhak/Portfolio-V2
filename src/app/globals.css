@@ -149,7 +149,7 @@
   .timeline-item {
     position: relative;
     display: grid;
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 160px 1fr;
     gap: 28px;
     padding: 24px 0 40px;
   }
@@ -230,10 +230,12 @@
   width: 1px;
   background: linear-gradient(to bottom, var(--c-line), var(--c-line) 60%, transparent);
 }
+/* Node centre sits on the line's centre (8.5px into .timeline): with a 17px
+   node, its left edge is exactly -padding-left (40px, or 28px on phones). */
 .timeline-item::before {
   content: "";
   position: absolute;
-  left: -36px; top: 28px;
+  left: -40px; top: 28px;
   width: 17px; height: 17px;
   border-radius: 50%;
   background: var(--c-bg);
@@ -246,7 +248,7 @@
   background: var(--c-accent-soft);
 }
 @media (max-width: 520px) {
-  .timeline-item::before { left: -24px; }
+  .timeline-item::before { left: -28px; }
 }
 .timeline-body li::before {
   content: "→";

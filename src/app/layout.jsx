@@ -3,6 +3,13 @@ import './globals.css';
 export const metadata = {
   title: 'Rith Seyhak — Software Engineer',
   description: 'Portfolio of Rith Seyhak — aspiring software engineer based in Phnom Penh, Cambodia.',
+  // Served straight from public/ so the dev server doesn't compile them as routes.
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }) {

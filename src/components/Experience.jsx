@@ -30,7 +30,7 @@ export function Experience() {
               <div key={e.id} className="timeline-item" data-type={e.type}>
                 <div className="font-display italic text-[14px] text-ink-3 pt-1">
                   {e.type}
-                  <span className="block text-ink font-medium mt-1 text-[14px]">{e.duration}</span>
+                  <span className="block text-ink font-medium mt-1 text-[14px] whitespace-nowrap">{e.duration}</span>
                 </div>
                 <div className="timeline-body">
                   <h4 className="font-display text-[24px] font-medium tracking-[-0.02em] leading-[1.2]">{e.role}</h4>
