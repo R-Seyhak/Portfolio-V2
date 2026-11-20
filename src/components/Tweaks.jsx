@@ -19,11 +19,11 @@ export function Tweaks({ visible, state, setState }) {
         <div className="font-semibold text-[14px] before:content-['◆'] before:text-accent before:mr-2 before:text-[10px]">
           Tweaks
         </div>
-        <span className="font-mono text-[11px] text-ink-3">live</span>
+        <span className="font-display italic text-[13.5px] text-ink-3">live</span>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] flex justify-between">
+        <div className="font-display italic text-[13.5px] text-ink-3 flex justify-between">
           Theme <span className="text-ink normal-case">{state.theme}</span>
         </div>
         <div className="grid grid-flow-col gap-1 p-[3px] bg-bg-2 border border-line rounded-lg">
@@ -38,7 +38,7 @@ export function Tweaks({ visible, state, setState }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] flex justify-between">
+        <div className="font-display italic text-[13.5px] text-ink-3 flex justify-between">
           Accent hue <span className="text-ink normal-case">{state.accentHue}°</span>
         </div>
         <input
@@ -49,7 +49,7 @@ export function Tweaks({ visible, state, setState }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <div className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] flex justify-between">
+        <div className="font-display italic text-[13.5px] text-ink-3 flex justify-between">
           Density <span className="text-ink normal-case">{state.density}</span>
         </div>
         <div className="grid grid-flow-col gap-1 p-[3px] bg-bg-2 border border-line rounded-lg">

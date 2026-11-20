@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   SiFlutter, SiTypescript, SiExpress, SiPostgresql,
   SiMongodb, SiReact, SiNodedotjs, SiUnity,
@@ -201,7 +201,7 @@ function useProjectSteps(count, titles, reduced) {
     let touchStepped = false;
     let touchStartedInside = false;
     const onTouchStart = (e) => {
-      if (e.touches.length !== 1) { touchMode = 'native'; return; }
+      if (e.touches.length !== 1 || e.target.closest?.('[data-native-scroll]')) { touchMode = 'native'; return; }
       touchY = e.touches[0].clientY;
       touchX = e.touches[0].clientX;
       touchMode = null;
@@ -232,6 +232,7 @@ function useProjectSteps(count, titles, reduced) {
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
       const t = e.target;
       if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (t?.closest?.('[data-native-scroll]')) return;   // e.g. the screenshot viewer
       let dir = 0;
       if (e.key === 'ArrowDown' || e.key === 'PageDown') dir = 1;
       else if (e.key === 'ArrowUp' || e.key === 'PageUp') dir = -1;
@@ -293,6 +294,162 @@ function useProjectSteps(count, titles, reduced) {
   return { refs, focusProject };
 }
 
+/* ---------------------------------------------------------------------------
+   Screenshot viewer
+   A modal <dialog> (focus stays inside, Esc closes, focus returns to the
+   thumbnail). The image grows out of the thumbnail and shrinks back into it
+   on close. The image is sized in JS from the thumbnail's natural size, so the
+   open animation never waits for a load; it is never scaled past 100%.
+   --------------------------------------------------------------------------- */
+const VIEW_EASE = 'cubic-bezier(.2,.8,.2,1)';
+
+function ShotViewer({ project, index, count, origin, reduced, onClose }) {
+  const dlgRef = useRef(null);
+  const stageRef = useRef(null);
+  const imgRef = useRef(null);
+  const closing = useRef(false);
+
+  const fit = useCallback(() => {
+    const stage = stageRef.current;
+    const img = imgRef.current;
+    if (!stage || !img) return;
+    const w = origin?.naturalWidth || img.naturalWidth || 1600;
+    const h = origin?.naturalHeight || img.naturalHeight || 1000;
+    const k = Math.min(stage.clientWidth / w, stage.clientHeight / h, 1);
+    img.style.width = `${Math.round(w * k)}px`;
+    img.style.height = `${Math.round(h * k)}px`;
+  }, [origin]);
+
+  // Transform that puts the viewer image exactly over the thumbnail.
+  const toThumb = useCallback(() => {
+    const img = imgRef.current;
+    if (!img || !origin?.isConnected) return null;
+    const a = origin.getBoundingClientRect();
+    const b = img.getBoundingClientRect();
+    if (!a.width || !b.width) return null;
+    const dx = a.left + a.width / 2 - (b.left + b.width / 2);
+    const dy = a.top + a.height / 2 - (b.top + b.height / 2);
+    return `translate(${dx}px, ${dy}px) scale(${a.width / b.width}, ${a.height / b.height})`;
+  }, [origin]);
+
+  // Open: lock the page, show the dialog, grow the image out of the thumbnail.
+  useLayoutEffect(() => {
+    const dlg = dlgRef.current;
+    const root = document.documentElement;
+    const body = document.body;
+    const prev = { overflow: body.style.overflow, gutter: root.style.scrollbarGutter };
+    root.style.scrollbarGutter = 'stable';   // no layout shift when the scrollbar hides
+    body.style.overflow = 'hidden';
+    if (!dlg.open) dlg.showModal();
+    fit();
+
+    if (!reduced) {
+      const from = toThumb();
+      imgRef.current.animate(
+        from
+          ? [{ transform: from }, { transform: 'none' }]
+          : [{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }],
+        { duration: 560, easing: VIEW_EASE }
+      );
+      dlg.querySelectorAll('[data-fade]').forEach((el) => {
+        el.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 320, easing: 'ease', delay: Number(el.dataset.fade) || 0, fill: 'backwards',
+        });
+      });
+    }
+
+    const onResize = () => fit();
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      dlg.getAnimations({ subtree: true }).forEach((a) => a.cancel());
+      body.style.overflow = prev.overflow;
+      root.style.scrollbarGutter = prev.gutter;
+    };
+  }, [fit, toThumb, reduced]);
+
+  // Close: shrink back into the thumbnail while the backdrop fades.
+  const requestClose = useCallback(() => {
+    if (closing.current) return;
+    closing.current = true;
+    const dlg = dlgRef.current;
+    const finish = () => { if (dlg.open) dlg.close(); onClose(); };
+    if (reduced) { finish(); return; }
+    const to = toThumb();
+    const anims = [
+      imgRef.current.animate(
+        to
+          ? [{ transform: 'none' }, { transform: to }]
+          : [{ opacity: 1 }, { opacity: 0, transform: 'scale(.97)' }],
+        { duration: to ? 440 : 220, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }
+      ),
+    ];
+    dlg.querySelectorAll('[data-fade]').forEach((el) => {
+      anims.push(el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease', fill: 'forwards' }));
+    });
+    Promise.all(anims.map((a) => a.finished)).then(finish, finish);
+  }, [onClose, reduced, toThumb]);
+
+  useEffect(() => {
+    const dlg = dlgRef.current;
+    const onCancel = (e) => { e.preventDefault(); requestClose(); };              // Esc
+    const onNativeClose = () => { if (!closing.current) { closing.current = true; onClose(); } };
+    dlg.addEventListener('cancel', onCancel);
+    dlg.addEventListener('close', onNativeClose);
+    return () => {
+      dlg.removeEventListener('cancel', onCancel);
+      dlg.removeEventListener('close', onNativeClose);
+    };
+  }, [requestClose, onClose]);
+
+  return (
+    <dialog
+      ref={dlgRef}
+      className="pj-viewer"
+      aria-label={`${project.title} screenshot`}
+      data-native-scroll
+      onClick={(e) => { if (e.target !== imgRef.current) requestClose(); }}
+    >
+      <div className="pj-viewer-backdrop" data-fade="0" aria-hidden="true" />
+      <div className="pj-viewer-bar" data-fade="120">
+        <p className="pj-viewer-meta">
+          <b>{pad(index + 1)} / {pad(count)}</b>
+          <span className="pj-label-rule" aria-hidden="true" />
+          <span>{project.year} · {project.tag}</span>
+        </p>
+        <button type="button" className="pj-viewer-close">
+          Close <kbd>Esc</kbd>
+        </button>
+      </div>
+      <div className="pj-viewer-stage" ref={stageRef}>
+        <img ref={imgRef} className="pj-viewer-img" src={project.image} alt={`${project.title} screenshot`} decoding="async" />
+      </div>
+      <div className="pj-viewer-caption" data-fade="160">
+        <p className="pj-viewer-title">{project.title}</p>
+        <Roles project={project} className="pj-roles pj-roles--viewer" />
+      </div>
+    </dialog>
+  );
+}
+
+/** Your part in the project, from `roles` in data.js (a string or a list). */
+const rolesOf = (project) => [].concat(project.roles ?? []).filter(Boolean);
+
+function Roles({ project, className = 'pj-roles' }) {
+  const roles = rolesOf(project);
+  if (!roles.length) return null;
+  return (
+    <p className={className}>
+      {roles.map((r, k) => (
+        <span key={r} className="pj-roles-v">
+          {k > 0 && <span className="pj-roles-sep" aria-hidden="true">/</span>}
+          {r}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 function ProjectInfo({ project, onTechHover, onTechLeave }) {
   const titleId = `project-${project.id}-title`;
   return (
@@ -305,6 +462,7 @@ function ProjectInfo({ project, onTechHover, onTechLeave }) {
       <h3 id={titleId} className="pj-title" data-long={project.title.length > 16 ? '' : undefined}>
         {project.title}
       </h3>
+      <Roles project={project} />
       <p className="pj-summary">{project.summary}</p>
 
       {project.features?.length > 0 && (
@@ -343,10 +501,10 @@ function ProjectInfo({ project, onTechHover, onTechLeave }) {
 export function Projects({ onTechHover, onTechLeave }) {
   const { projects } = PORTFOLIO;
 
-  // Oldest → newest, so the journey ends at the latest work. Array#sort is
-  // stable, so projects sharing a year keep their data.js order.
+  // Newest first: the exact reverse of oldest → newest (Array#sort is stable,
+  // so within a year the last project in data.js comes first).
   const timeline = useMemo(
-    () => [...projects].sort((a, b) => Number(a.year) - Number(b.year)),
+    () => [...projects].sort((a, b) => Number(a.year) - Number(b.year)).reverse(),
     [projects]
   );
   const n = timeline.length;
@@ -356,11 +514,14 @@ export function Projects({ onTechHover, onTechLeave }) {
   const { refs, focusProject } = useProjectSteps(n, titles, reduced);
   const R = refs.current;
 
+  const [viewer, setViewer] = useState(null);   // { index, origin: <img> }
+  const closeViewer = useCallback(() => setViewer(null), []);
+
   return (
     <section id="projects" className="pt-[var(--section-y)] relative bg-bg">
       <div className="section-container" style={{ maxWidth: 1680 }}>
         <div className="section-header" style={{ marginBottom: 0 }}>
-          <div className="font-mono text-[13px] text-ink-3 tracking-[0.05em]">/ 04 · work</div>
+          <div className="font-display italic text-[15px] text-ink-3">/ 04 · work</div>
           <div>
             <h2 className="font-display font-medium text-ink tracking-[-0.025em] leading-none" style={{ fontSize: 'clamp(36px,5.5vw,64px)' }}>
               Things I've<br />actually shipped.
@@ -380,7 +541,7 @@ export function Projects({ onTechHover, onTechLeave }) {
         <div className="pj-scene" ref={(el) => { R.scene = el; }} style={{ '--pj-n': n }}>
           <div className="pj-stage">
             <div className="pj-stage-inner">
-              <ol className="pj-projects" role="list" aria-label="Projects, oldest to newest">
+              <ol className="pj-projects" role="list" aria-label="Projects, newest to oldest">
                 {timeline.map((p, i) => (
                   <li
                     key={p.id}
@@ -392,7 +553,14 @@ export function Projects({ onTechHover, onTechLeave }) {
                   >
                     <figure className="pj-shot">
                       {p.image && (
-                        <img src={p.image} alt={`${p.title} screenshot`} loading="lazy" decoding="async" />
+                        <button
+                          type="button"
+                          className="pj-shot-open"
+                          aria-label={`View ${p.title} screenshot full screen`}
+                          onClick={(e) => setViewer({ index: i, origin: e.currentTarget.querySelector('img') })}
+                        >
+                          <img src={p.image} alt="" loading="lazy" decoding="async" />
+                        </button>
                       )}
                     </figure>
                     <ProjectInfo project={p} onTechHover={onTechHover} onTechLeave={onTechLeave} />
@@ -434,6 +602,18 @@ export function Projects({ onTechHover, onTechLeave }) {
           </div>
         </div>
       </div>
+
+      {viewer && (
+        <ShotViewer
+          key={timeline[viewer.index].id}
+          project={timeline[viewer.index]}
+          index={viewer.index}
+          count={n}
+          origin={viewer.origin}
+          reduced={reduced}
+          onClose={closeViewer}
+        />
+      )}
     </section>
   );
 }

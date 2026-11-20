@@ -13,13 +13,13 @@ export function Experience() {
     <section id="experience" className="py-[var(--section-y)] relative bg-bg-2">
       <div className="section-container">
         <div className="section-header">
-          <div className="font-mono text-[13px] text-ink-3 tracking-[0.05em]">/ 05 · path</div>
+          <div className="font-display italic text-[15px] text-ink-3">/ 05 · path</div>
           <div>
             <h2 className="font-display font-medium text-ink tracking-[-0.025em] leading-none" style={{ fontSize: 'clamp(36px,5.5vw,64px)' }}>
               The road<br />so far.
             </h2>
             <p className="mt-3.5 max-w-[560px] text-ink-2 text-[15px] leading-relaxed">
-              Education, volunteering, and the odd side quest. Still early, still learning.
+              Work, education, volunteering, and the odd side quest. Still early, still learning.
             </p>
           </div>
         </div>
@@ -28,7 +28,7 @@ export function Experience() {
           <div className="timeline">
             {experience.map((e) => (
               <div key={e.id} className="timeline-item" data-type={e.type}>
-                <div className="font-mono text-[12px] text-ink-3 uppercase tracking-[0.08em] pt-1">
+                <div className="font-display italic text-[14px] text-ink-3 pt-1">
                   {e.type}
                   <span className="block text-ink font-medium mt-1 text-[14px]">{e.duration}</span>
                 </div>
@@ -47,7 +47,7 @@ export function Experience() {
                   )}
                   {e.certificate && (
                     <button
-                      className="mt-[18px] inline-flex items-center gap-2 px-3.5 py-[7px] text-[12px] border border-accent text-accent bg-accent-soft rounded-full font-mono transition-all hover:bg-accent hover:text-white"
+                      className="mt-[18px] inline-flex items-center gap-2 px-3.5 py-[7px] text-[14px] border border-accent text-accent bg-accent-soft rounded-full font-display italic transition-all hover:bg-accent hover:text-white"
                       onClick={() => setCertOpen(true)}
                     >
                       <Icon.cert /> View certificate
@@ -76,7 +76,7 @@ export function Experience() {
             >
               <Icon.close />
             </button>
-            <div className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-ink-3">
+            <div className="flex items-center gap-2 font-display italic text-[13.5px] font-medium text-ink-3">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
               Certificate
             </div>

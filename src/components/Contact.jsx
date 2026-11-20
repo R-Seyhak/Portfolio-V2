@@ -75,7 +75,7 @@ export function Contact() {
     <section id="contact" className="py-[var(--section-y)] relative bg-bg">
       <div className="section-container">
         <div className="section-header">
-          <div className="font-mono text-[13px] text-ink-3 tracking-[0.05em]">/ 06 · contact</div>
+          <div className="font-display italic text-[15px] text-ink-3">/ 06 · contact</div>
           <div>
             <h2 className="font-display font-medium text-ink tracking-[-0.025em] leading-none" style={{ fontSize: 'clamp(36px,5.5vw,64px)' }}>
               Let's make something<br />together.
@@ -93,7 +93,7 @@ export function Contact() {
               Reach me via the form — or skip it and email me directly.
             </p>
             <button
-              className="mt-7 flex items-center gap-2.5 px-[18px] py-3.5 border border-line rounded-[12px] bg-bg-2 cursor-pointer font-mono text-[13px] sm:text-[14px] w-full sm:w-fit max-w-full transition-all hover:border-ink-3 hover:bg-bg-3"
+              className="mt-7 flex items-center gap-2.5 px-[18px] py-3.5 border border-line rounded-[12px] bg-bg-2 cursor-pointer font-display italic text-[15px] sm:text-[16px] w-full sm:w-fit max-w-full transition-all hover:border-ink-3 hover:bg-bg-3"
               onClick={copyEmail}
             >
               <Icon.mail />
@@ -105,10 +105,10 @@ export function Contact() {
             </button>
 
             <div className="mt-[22px] flex flex-col gap-0.5 text-[14px] text-ink-2">
-              <span className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] mt-3">Elsewhere</span>
+              <span className="font-display italic text-[13.5px] text-ink-3 mt-3">Elsewhere</span>
               <a href={person.github}  target="_blank" rel="noreferrer" className="hover:text-ink">↗ github.com/KMernDabest</a>
               <a href={person.linkedin} target="_blank" rel="noreferrer" className="hover:text-ink">↗ linkedin / seyhak-rith-wk</a>
-              <span className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] mt-3">Timezone</span>
+              <span className="font-display italic text-[13.5px] text-ink-3 mt-3">Timezone</span>
               <span>ICT (UTC+7) · replies within ~24h</span>
             </div>
           </div>
@@ -123,7 +123,7 @@ export function Contact() {
               { id: 'message', label: 'Message', type: 'textarea', placeholder: 'Tell me about the project, role, or idea…', rows: 5 },
             ].map(({ id, label, type, placeholder, rows }) => (
               <div key={id} className="flex flex-col gap-2 relative">
-                <label className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em]">
+                <label className="font-display italic text-[13.5px] text-ink-3">
                   {label} <span className="text-accent">*</span>
                 </label>
                 {type === 'textarea'
@@ -134,7 +134,7 @@ export function Contact() {
                       onChange={(e) => setForm({ ...form, [id]: e.target.value })}
                       onBlur={() => setTouched({ ...touched, [id]: true })} />
                 }
-                <div className="font-mono text-[11px] text-ink-3 flex justify-between">
+                <div className="font-display italic text-[13.5px] text-ink-3 flex justify-between">
                   <span>{id === 'message' ? `${form.message.length} chars` : ' '}</span>
                   {touched[id] && errors[id]
                     ? <span style={{ color: 'oklch(62% 0.2 25)' }}>× {errors[id]}</span>
@@ -145,7 +145,7 @@ export function Contact() {
             ))}
 
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 mt-1">
-              <span className="font-mono text-[11px] text-ink-3">
+              <span className="font-display italic text-[13.5px] text-ink-3">
                 {status === 'error'
                   ? <span style={{ color: 'oklch(62% 0.2 25)' }}>× {errorMsg}</span>
                   : 'Enter ↵ to send · never shared'}
@@ -178,7 +178,7 @@ export function Contact() {
               </p>
             </div>
             <div>
-              <h5 className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] mb-3.5">Navigate</h5>
+              <h5 className="font-display italic text-[13.5px] text-ink-3 mb-3.5">Navigate</h5>
               <ul className="list-none flex flex-col gap-2">
                 {['home', 'about', 'skills', 'projects', 'experience', 'contact'].map((id) => (
                   <li key={id}><a href={`#${id}`} className="text-[14px] text-ink-2 transition-colors hover:text-ink capitalize">{id === 'projects' ? 'Work' : id === 'experience' ? 'Path' : id.charAt(0).toUpperCase() + id.slice(1)}</a></li>
@@ -186,7 +186,7 @@ export function Contact() {
               </ul>
             </div>
             <div>
-              <h5 className="font-mono text-[11px] text-ink-3 uppercase tracking-[0.08em] mb-3.5">Elsewhere</h5>
+              <h5 className="font-display italic text-[13.5px] text-ink-3 mb-3.5">Elsewhere</h5>
               <ul className="list-none flex flex-col gap-2">
                 <li><a href={person.github}  target="_blank" rel="noreferrer" className="text-[14px] text-ink-2 transition-colors hover:text-ink">GitHub ↗</a></li>
                 <li><a href={person.linkedin} target="_blank" rel="noreferrer" className="text-[14px] text-ink-2 transition-colors hover:text-ink">LinkedIn ↗</a></li>
@@ -194,7 +194,7 @@ export function Contact() {
               </ul>
             </div>
           </div>
-          <div className="mt-10 pt-5 border-t border-line flex justify-between flex-wrap gap-2 font-mono text-[11px] text-ink-3">
+          <div className="mt-10 pt-5 border-t border-line flex justify-between flex-wrap gap-2 font-display italic text-[13.5px] text-ink-3">
             <span>© {new Date().getFullYear()} Rith Seyhak · All rights reserved</span>
             <span>Built with care · Phnom Penh, KH</span>
           </div>

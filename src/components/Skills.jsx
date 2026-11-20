@@ -87,7 +87,7 @@ export function Skills({ activeTech, onTechClick }) {
     <section id="skills" className="py-[var(--section-y)] relative bg-bg-2">
       <div className="section-container">
         <div className="section-header">
-          <div className="font-mono text-[13px] text-ink-3 tracking-[0.05em]">/ 03 · skills</div>
+          <div className="font-display italic text-[15px] text-ink-3">/ 03 · skills</div>
           <div>
             <h2 className="font-display font-medium text-ink tracking-[-0.025em] leading-none" style={{ fontSize: 'clamp(36px,5.5vw,64px)' }}>
               {skills.length} tools I actually reach<br />for, on a good day.
@@ -129,7 +129,7 @@ export function Skills({ activeTech, onTechClick }) {
                   onClick={() => setCat(c.id)}
                 >
                   {c.label}
-                  <span className="font-mono text-[11px] opacity-60">{counts[c.id] || 0}</span>
+                  <span className="font-display italic text-[13.5px] opacity-60">{counts[c.id] || 0}</span>
                 </button>
               );
             })}
@@ -150,7 +150,7 @@ export function Skills({ activeTech, onTechClick }) {
                   onClick={() => onTechClick && onTechClick(s.name)}
                 >
                   <div className="flex items-center justify-center w-[52px] h-[52px]">{meta.icon}</div>
-                  <span className="font-mono text-[11px] text-ink-2 text-center tracking-[0.01em] leading-[1.3]">{s.name}</span>
+                  <span className="font-display italic text-[13.5px] text-ink-2 text-center leading-[1.3]">{s.name}</span>
                 </div>
               );
             })}

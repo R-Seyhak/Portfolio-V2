@@ -69,12 +69,16 @@ export const PORTFOLIO = {
   ],
 
   projects: [
+    // roles: your part in each project, shown under the title and in the
+    // full-screen viewer. One or more, e.g. ["Frontend Developer", "UI Designer"].
+    //
     // Cover images and project facts from chanraksa.com (team projects built
     // at CamCyber Digital Tech Team). No public link, so no "See project".
     {
       id: "mlmupc-hrm",
       title: "MLMUPC Human Resource Management System",
       year: "2026",
+      roles: ["Full-Stack Developer"],
       summary:
         "A ministry-wide HR platform for the Ministry of Land Management, Urban Planning and Construction, taking civil-servant administration fully digital for nearly 3,000 officers.",
       features: [
@@ -92,6 +96,7 @@ export const PORTFOLIO = {
       id: "nis-hrm",
       title: "NIS Human Resource Management System",
       year: "2026",
+      roles: ["Full-Stack Developer"],
       summary:
         "A government HR platform for the National Institute of Statistics, Ministry of Planning, with on-site face-scanner check-ins connected to the cloud for 500+ officers.",
       features: [
@@ -109,6 +114,7 @@ export const PORTFOLIO = {
       id: "phumiyerng",
       title: "PhumiYerng",
       year: "2026",
+      roles: ["Full-Stack Developer"],
       summary:
         "A community tourism and marketplace app for rural Cambodia, bringing 19 communities of LASED III, the World Bank-backed government land programme, onto one platform.",
       features: [
@@ -125,7 +131,7 @@ export const PORTFOLIO = {
     {
       id: "modula-pos",
       title: "Modula POS",
-      role: "Full-stack · UI design",
+      roles: ["Full-Stack Developer"],
       year: "2025",
       summary:
         "A pay-as-you-go point-of-sale platform with a distinctly modern UI and streamlined checkout flow.",
@@ -147,7 +153,7 @@ export const PORTFOLIO = {
     {
       id: "melodia",
       title: "Melodia",
-      role: "MERN · Player UI",
+      roles: ["Full-Stack Developer"],
       year: "2024",
       summary:
         "A Spotify-style dashboard clone with full playback, playlists, and a responsive player.",
@@ -169,7 +175,7 @@ export const PORTFOLIO = {
     {
       id: "frostguard",
       title: "FrostGuard",
-      role: "Unity · Gameplay",
+      roles: ["Gameplay Developer"],
       year: "2024",
       summary:
         "A 3D strategic tower defense game with wave-based enemies and upgradable towers.",
@@ -191,6 +197,22 @@ export const PORTFOLIO = {
   ],
 
   experience: [
+    {
+      id: "camcyber",
+      type: "work",
+      role: "Full-Stack Developer Intern",
+      org: "CamCyber Digital Tech Team",
+      location: "Phnom Penh, Cambodia",
+      duration: "2026 — Present",
+      year_start: 2026,
+      year_end: null,          // ongoing
+      description:
+        "A startup building national-scale platforms for government ministries, from HR systems serving thousands of civil servants to nurse licensing and a World Bank-backed tourism app.",
+      highlights: [
+        "Full-stack on the HR projects, delivering web, mobile and API work",
+        "MLMUPC and NIS HR systems and PhumiYerng, featured under Work",
+      ],
+    },
     {
       id: "cadt",
       type: "education",

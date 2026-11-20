@@ -262,7 +262,7 @@ export function CmdK({ open, onClose, setTheme, theme }) {
         <div className="max-h-[50vh] overflow-auto p-2">
           {Object.keys(grouped).map((g) => (
             <Fragment key={g}>
-              <div className="px-3 pt-2.5 pb-1 font-mono text-[10px] text-ink-3 uppercase tracking-[0.08em]">{g}</div>
+              <div className="px-3 pt-2.5 pb-1 font-display italic text-[12.5px] text-ink-3">{g}</div>
               {grouped[g].map((it) => (
                 <div
                   key={it.label}
@@ -270,11 +270,11 @@ export function CmdK({ open, onClose, setTheme, theme }) {
                   onMouseEnter={() => setSel(it._i)}
                   onClick={() => { it.action(); onClose(); }}
                 >
-                  <div className={cn('w-7 h-7 rounded-[7px] border border-line bg-bg-2 grid place-items-center font-mono text-[12px] text-ink-2', it._i === sel && 'bg-ink text-bg border-ink')}>
+                  <div className={cn('w-7 h-7 rounded-[7px] border border-line bg-bg-2 grid place-items-center font-display italic text-[14px] text-ink-2', it._i === sel && 'bg-ink text-bg border-ink')}>
                     {it.kind === 'go' ? '→' : it.kind === 'theme' ? '◐' : '↗'}
                   </div>
                   <div>{it.label}</div>
-                  <div className="ml-auto font-mono text-[11px] text-ink-3">{it.hint}</div>
+                  <div className="ml-auto font-display italic text-[13.5px] text-ink-3">{it.hint}</div>
                 </div>
               ))}
             </Fragment>
@@ -283,7 +283,7 @@ export function CmdK({ open, onClose, setTheme, theme }) {
             <div className="py-6 px-4 text-center text-ink-3 text-[13px]">No matches</div>
           )}
         </div>
-        <div className="border-t border-line px-4 py-2.5 font-mono text-[11px] text-ink-3 flex justify-between">
+        <div className="border-t border-line px-4 py-2.5 font-display italic text-[13.5px] text-ink-3 flex justify-between">
           <span>
             <span className="px-[5px] py-px border border-line rounded bg-bg-2">↑↓</span> navigate ·{' '}
             <span className="px-[5px] py-px border border-line rounded bg-bg-2">↵</span> open

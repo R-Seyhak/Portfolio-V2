@@ -2,100 +2,95 @@
 
 import { useState, useEffect } from 'react';
 import { PORTFOLIO } from '../data.js';
-import { Icon } from './primitives.jsx';
 
-function Typewriter({ words, period = 2400 }) {
-  const [idx, setIdx] = useState(0);
-  const [sub, setSub] = useState('');
-  const [del, setDel] = useState(false);
+const KEYWORDS = ['clean web apps.', 'mobile apps.', 'game worlds.', 'scalable systems.'];
+
+/**
+ * Rotating keyword in the headline's italic. Every word is stacked, invisible,
+ * in one grid cell, so the slot is always as wide as the longest word and the
+ * headline never reflows. The current word rises in while the previous one
+ * lifts away; words always change whole, never letter by letter.
+ */
+function RotatingWord({ words, interval = 3200 }) {
+  const [state, setState] = useState({ cur: 0, prev: null, n: 0 });
 
   useEffect(() => {
-    const full = words[idx % words.length];
-    const delta = del ? 60 : 120;
-    const t = setTimeout(() => {
-      if (!del) {
-        const next = full.slice(0, sub.length + 1);
-        setSub(next);
-        if (next === full) setTimeout(() => setDel(true), period);
-      } else {
-        const next = full.slice(0, sub.length - 1);
-        setSub(next);
-        if (next === '') { setDel(false); setIdx((i) => i + 1); }
-      }
-    }, delta);
-    return () => clearTimeout(t);
-  }, [sub, del, idx, words, period]);
+    const id = setInterval(() => {
+      setState((s) => ({ cur: (s.cur + 1) % words.length, prev: s.cur, n: s.n + 1 }));
+    }, interval);
+    return () => clearInterval(id);
+  }, [words.length, interval]);
 
   return (
-    <span>
-      <span className="italic font-medium text-accent">{sub}</span>
-      <span style={{ display: 'inline-block', width: '3px', height: '0.85em', background: 'currentColor', marginLeft: '4px', animation: 'blink 1s infinite', verticalAlign: 'baseline' }} />
+    <span className="hero-rotator" aria-hidden="true">
+      {words.map((w) => (
+        <span key={w} className="hero-word hero-word--ghost">{w}</span>
+      ))}
+      {state.prev !== null && (
+        <span key={`out-${state.n}`} className="hero-word hero-word--out">{words[state.prev]}</span>
+      )}
+      <span key={`in-${state.n}`} className="hero-word hero-word--in">{words[state.cur]}</span>
     </span>
   );
 }
 
+const ArrowUpRight = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 17 17 7M8 7h9v9" />
+  </svg>
+);
+
 export function Hero({ onOpenCmdK }) {
   const { person } = PORTFOLIO;
+  const stats = [
+    { k: 'Projects', v: `${PORTFOLIO.projects.length}+` },
+    { k: 'Stacks',   v: String(PORTFOLIO.skills.length) },
+    { k: 'School',   v: 'CADT ’26' },
+    { k: 'Based in', v: 'PP · KH' },
+  ];
+
   return (
-    <section id="home" className="min-h-screen pt-28 sm:pt-32 md:pt-40 pb-16 md:pb-20 relative overflow-hidden bg-bg">
+    <section id="home" className="hero min-h-screen pt-28 sm:pt-32 md:pt-40 pb-16 md:pb-20 relative overflow-hidden bg-bg">
       <div className="section-container flex flex-col items-start" style={{ maxWidth: 880 }}>
 
-        <div className="inline-flex items-center gap-2.5 font-mono text-[12px] text-ink-2 px-3.5 py-2 border border-line rounded-full bg-bg-2 mb-7">
-          <span style={{ color: 'oklch(62% 0.2 25)' }}>●</span>
-          Employed · Phnom Penh / Remote
-        </div>
+        <p className="hero-eyebrow">
+          <i className="hero-eyebrow-dot" aria-hidden="true" />
+          <span className="hero-eyebrow-status">Employed</span>
+          <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
+          <span>{person.location}</span>
+        </p>
 
-        <h1
-          className="font-display font-normal text-ink leading-[1.05] tracking-[-0.035em]"
-          style={{ fontSize: 'clamp(40px, 5.5vw, 76px)' }}
-        >
-          Rith Seyhak
-          <span className="inline-block font-mono text-[0.15em] align-super text-ink-3 ml-1.5 tracking-normal font-medium">01</span>
+        <h1 className="hero-title">
+          Rith Seyhak<span className="hero-index" aria-hidden="true">01</span>
           <br />
-          <span className="inline-block mr-3.5">builds</span>
-          <span className="inline-block min-h-[1.1em] min-w-[10ch] align-baseline whitespace-nowrap">
-            <Typewriter words={['clean web apps.', 'mobile apps.', 'game worlds.', 'scalable systems.']} />
-          </span>
+          builds{' '}
+          <span className="sr-only">clean web apps, mobile apps, game worlds and scalable systems.</span>
+          <RotatingWord words={KEYWORDS} />
         </h1>
 
-        <p className="mt-6 text-[16px] sm:text-[18px] md:text-[19px] leading-[1.55] text-ink-2 max-w-[520px]">
-          <b className="text-ink font-semibold">Software engineer</b> in Phnom Penh, Cambodia — currently studying CS at CADT.
+        <p className="hero-lede">
+          <strong>Software engineer</strong> in Phnom Penh, Cambodia — currently studying CS at CADT.
           I spend my evenings turning ideas into code, from POS systems to tower-defense games.
         </p>
 
-        <div className="hero-stat-row mt-9 w-full">
-          {[
-            { k: 'Projects', v: `${PORTFOLIO.projects.length}+` },
-            { k: 'Stacks',   v: String(PORTFOLIO.skills.length) },
-            { k: 'School',   v: "CADT '26" },
-            { k: 'Based in', v: 'PP · KH' },
-          ].map(({ k, v }) => (
-            <div key={k} className="hero-stat-item flex flex-col px-7 border-r border-line">
-              <span className="font-mono text-[10px] text-ink-3 uppercase tracking-[0.08em]">{k}</span>
-              <span className="font-display text-[24px] font-medium text-ink mt-1 tracking-[-0.02em]">{v}</span>
+        <dl className="hero-stats">
+          {stats.map(({ k, v }) => (
+            <div key={k} className="hero-stat">
+              <dt>{k}</dt>
+              <dd>{v}</dd>
             </div>
           ))}
-        </div>
+        </dl>
 
-        <div className="flex flex-wrap gap-3 mt-9">
-          <button
-            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-[10px] text-[14px] font-medium bg-ink text-bg border border-transparent transition-[transform,background] active:translate-y-px hover:opacity-90 cursor-pointer"
-            onClick={onOpenCmdK}
-          >
-            Explore this site
-            <span className="font-mono opacity-60 text-[11px] ml-1">⌘K</span>
+        <div className="hero-actions">
+          <button type="button" className="hero-cta" onClick={onOpenCmdK}>
+            <span className="hero-cta-label">Explore this site</span>
           </button>
-          <a
-            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-[10px] text-[14px] font-medium bg-transparent text-ink border border-line-2 transition-[transform,background,border-color] active:translate-y-px hover:bg-bg-2 hover:border-ink-3"
-            href={person.github} target="_blank" rel="noreferrer"
-          >
-            <Icon.github /> GitHub
+          <a className="hero-link" href={person.github} target="_blank" rel="noreferrer">
+            GitHub <ArrowUpRight />
           </a>
-          <a
-            className="inline-flex items-center gap-2.5 px-5 py-3 rounded-[10px] text-[14px] font-medium bg-transparent text-ink border border-line-2 transition-[transform,background,border-color] active:translate-y-px hover:bg-bg-2 hover:border-ink-3"
-            href={person.linkedin} target="_blank" rel="noreferrer"
-          >
-            <Icon.linkedin /> LinkedIn
+          <a className="hero-link" href={person.linkedin} target="_blank" rel="noreferrer">
+            LinkedIn <ArrowUpRight />
           </a>
         </div>
 
