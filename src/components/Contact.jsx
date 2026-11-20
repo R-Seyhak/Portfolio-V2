@@ -106,7 +106,7 @@ export function Contact() {
 
             <div className="mt-[22px] flex flex-col gap-0.5 text-[14px] text-ink-2">
               <span className="font-display italic text-[13.5px] text-ink-3 mt-3">Elsewhere</span>
-              <a href={person.github}  target="_blank" rel="noreferrer" className="hover:text-ink">↗ github.com/KMernDabest</a>
+              <a href={person.github}  target="_blank" rel="noreferrer" className="hover:text-ink">↗ github.com/R-Seyhak</a>
               <a href={person.linkedin} target="_blank" rel="noreferrer" className="hover:text-ink">↗ linkedin / seyhak-rith-wk</a>
               <span className="font-display italic text-[13.5px] text-ink-3 mt-3">Timezone</span>
               <span>ICT (UTC+7) · replies within ~24h</span>

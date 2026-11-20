@@ -882,8 +882,8 @@
 .site-status i {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: oklch(62% 0.2 25);
-  box-shadow: 0 0 0 3px oklch(62% 0.2 25 / 0.14);
+  background: oklch(66% 0.17 150);
+  box-shadow: 0 0 0 3px oklch(66% 0.17 150 / 0.16);
 }
 .site-status--show { display: inline-flex; }
 @media (min-width: 640px) { .site-status { display: inline-flex; } }
@@ -1071,8 +1071,8 @@
 .hero-eyebrow-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: oklch(62% 0.2 25);
-  box-shadow: 0 0 0 3px oklch(62% 0.2 25 / 0.14);
+  background: oklch(66% 0.17 150);
+  box-shadow: 0 0 0 3px oklch(66% 0.17 150 / 0.16);
   flex-shrink: 0;
 }
 .hero-eyebrow-status { color: var(--c-ink-2); }
@@ -1390,12 +1390,12 @@
 }
 .ab-row dd { margin: 0; font-size: 15px; line-height: 1.5; color: var(--c-ink); }
 .ab-dim { color: var(--c-ink-3); }
-.ab-status { display: inline-flex; align-items: center; gap: 8px; color: oklch(58% 0.19 25); }
+.ab-status { display: inline-flex; align-items: center; gap: 8px; color: oklch(56% 0.15 150); }
 .ab-status i {
   width: 6px; height: 6px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 0 3px oklch(62% 0.2 25 / 0.14);
+  box-shadow: 0 0 0 3px oklch(66% 0.17 150 / 0.16);
 }
 
 /* Interests: editorial keywords */

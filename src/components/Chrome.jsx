@@ -71,7 +71,7 @@ export function TopBar({ onOpenCmdK }) {
         </span>
 
         <div className="site-actions">
-          <span className="site-status"><i aria-hidden="true" />Employed</span>
+          <span className="site-status"><i aria-hidden="true" />Open to work</span>
           <button type="button" className="site-jump" onClick={onOpenCmdK} aria-label="Open command palette">
             Jump to <kbd>⌘K</kbd>
           </button>
@@ -144,7 +144,7 @@ function MobileMenu({ open, onClose, active }) {
         ))}
       </ol>
       <div className="mnav-foot">
-        <span className="site-status site-status--show"><i aria-hidden="true" />Employed</span>
+        <span className="site-status site-status--show"><i aria-hidden="true" />Open to work</span>
         <a href="/files/resume.pdf" download tabIndex={open ? 0 : -1} className="mnav-resume">Résumé (PDF) ↓</a>
       </div>
     </div>

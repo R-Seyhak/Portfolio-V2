@@ -75,7 +75,7 @@ export function About() {
       v: <>Computer Science <span className="ab-dim">— Cambodia Academy of Digital Technology, ’26</span></>,
     },
     { k: 'Focus', v: 'Full-stack · Mobile' },
-    { k: 'Status', v: <span className="ab-status"><i aria-hidden="true" />Employed</span> },
+    { k: 'Status', v: <span className="ab-status"><i aria-hidden="true" />Open to work</span> },
   ];
 
   return (

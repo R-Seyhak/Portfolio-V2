@@ -55,7 +55,7 @@ export function Hero({ onOpenCmdK }) {
 
         <p className="hero-eyebrow">
           <i className="hero-eyebrow-dot" aria-hidden="true" />
-          <span className="hero-eyebrow-status">Employed</span>
+          <span className="hero-eyebrow-status">Open to work</span>
           <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
           <span>{person.location}</span>
         </p>

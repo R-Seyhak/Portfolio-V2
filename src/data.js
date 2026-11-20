@@ -5,7 +5,7 @@ export const PORTFOLIO = {
     title: "Software Engineer",
     location: "Phnom Penh, Cambodia",
     email: "seyhakrithwk@gmail.com",
-    github: "https://github.com/KMernDabest",
+    github: "https://github.com/R-Seyhak",
     linkedin: "https://www.linkedin.com/in/seyhak-rith-wk",
     bio_short: "Aspiring software engineer building clean, modern web & mobile applications.",
     bio_long:
@@ -166,7 +166,7 @@ export const PORTFOLIO = {
         "Full MERN stack implementation",
       ],
       tech: ["MongoDB", "Express", "React", "Node.js"],
-      href: "https://github.com/KMernDabest/Melodia-Spotify-clone-.git",
+      href: "https://github.com/R-Seyhak/Melodia-Spotify-clone-.git",
       image: "/photos/spotify-clone.png",
       hue: 250,
       tag: "Music · Web",
