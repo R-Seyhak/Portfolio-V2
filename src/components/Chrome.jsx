@@ -75,7 +75,7 @@ export function TopBar({ onOpenCmdK }) {
           <button type="button" className="site-jump" onClick={onOpenCmdK} aria-label="Open command palette">
             Jump to <kbd>⌘K</kbd>
           </button>
-          <a className="site-resume" href="/files/resume.pdf" download aria-label="Download résumé (PDF)">
+          <a className="site-resume" href="/files/resume.pdf" download="CV-Rith-Seyhak.pdf" aria-label="Download résumé (PDF)">
             Résumé
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 4v14M6 12l6 6 6-6" />
@@ -145,7 +145,7 @@ function MobileMenu({ open, onClose, active }) {
       </ol>
       <div className="mnav-foot">
         <span className="site-status site-status--show"><i aria-hidden="true" />Open to work</span>
-        <a href="/files/resume.pdf" download tabIndex={open ? 0 : -1} className="mnav-resume">Résumé (PDF) ↓</a>
+        <a href="/files/resume.pdf" download="CV-Rith-Seyhak.pdf" tabIndex={open ? 0 : -1} className="mnav-resume">Résumé (PDF) ↓</a>
       </div>
     </div>
   );
