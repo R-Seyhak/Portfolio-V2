@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PORTFOLIO } from '../data.js';
+import { AvatarStage } from './avatar/AvatarStage';
 
 const KEYWORDS = ['clean web apps.', 'mobile apps.', 'game worlds.', 'scalable systems.'];
 
@@ -42,6 +43,20 @@ const ArrowUpRight = () => (
 
 export function Hero({ onOpenCmdK }) {
   const { person } = PORTFOLIO;
+  const heroRef = useRef(null);
+
+  // The pinned stage below the Projects heading is empty until it's reached,
+  // so this goes straight to the first project.
+  const goToWork = (e) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const track = document.querySelector('#projects .pj-track');
+    if (!track) return;
+    e.preventDefault();
+    window.scrollTo({ top: track.getBoundingClientRect().top + window.scrollY });
+    window.history.pushState(null, '', '#projects');
+    track.querySelector('.pj-shot-open')?.focus({ preventScroll: true });
+  };
+
   const stats = [
     { k: 'Projects', v: `${PORTFOLIO.projects.length}+` },
     { k: 'Stacks',   v: String(PORTFOLIO.skills.length) },
@@ -50,54 +65,61 @@ export function Hero({ onOpenCmdK }) {
   ];
 
   return (
-    <section id="home" className="hero min-h-screen pt-28 sm:pt-32 md:pt-40 pb-16 md:pb-20 relative overflow-hidden bg-bg">
-      <div className="section-container flex flex-col items-start" style={{ maxWidth: 880 }}>
+    <section id="home" ref={heroRef} className="hero min-h-screen relative overflow-hidden bg-bg">
+      <div className="section-container hero-shell">
+        <div className="hero-grid">
+          <div className="hero-intro">
+            <p className="hero-eyebrow">
+              <i className="hero-eyebrow-dot" aria-hidden="true" />
+              <span className="hero-eyebrow-status">Open to work</span>
+              <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
+              <span>{person.location}</span>
+            </p>
 
-        <p className="hero-eyebrow">
-          <i className="hero-eyebrow-dot" aria-hidden="true" />
-          <span className="hero-eyebrow-status">Open to work</span>
-          <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
-          <span>{person.location}</span>
-        </p>
+            <h1 className="hero-title">
+              Rith Seyhak<span className="hero-index" aria-hidden="true">01</span>
+              <br />
+              builds{' '}
+              <span className="sr-only">clean web apps, mobile apps, game worlds and scalable systems.</span>
+              <RotatingWord words={KEYWORDS} />
+            </h1>
+          </div>
 
-        <h1 className="hero-title">
-          Rith Seyhak<span className="hero-index" aria-hidden="true">01</span>
-          <br />
-          builds{' '}
-          <span className="sr-only">clean web apps, mobile apps, game worlds and scalable systems.</span>
-          <RotatingWord words={KEYWORDS} />
-        </h1>
+          <AvatarStage trackRef={heroRef} />
 
-        <p className="hero-lede">
-          <strong>Software engineer</strong> in Phnom Penh, Cambodia — currently studying CS at CADT.
-          I spend my evenings turning ideas into code, from POS systems to tower-defense games.
-        </p>
+          <div className="hero-details">
+            <p className="hero-lede">
+              <strong>Software engineer</strong> in Phnom Penh, Cambodia — currently studying CS at CADT.
+              I spend my evenings turning ideas into code, from POS systems to tower-defense games.
+            </p>
 
-        <dl className="hero-stats">
-          {stats.map(({ k, v }) => (
-            <div key={k} className="hero-stat">
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+            <div className="hero-actions">
+              <a className="hero-btn hero-btn--primary" href="#projects" onClick={goToWork}>View My Work</a>
+              <a className="hero-btn" href="#contact">Get in Touch</a>
             </div>
-          ))}
-        </dl>
 
-        <div className="hero-actions">
-          <button type="button" className="hero-cta" onClick={onOpenCmdK}>
-            <span className="hero-cta-label">Explore this site</span>
-          </button>
-          <a className="hero-link" href={person.github} target="_blank" rel="noreferrer">
-            GitHub <ArrowUpRight />
-          </a>
-          <a className="hero-link" href={person.linkedin} target="_blank" rel="noreferrer">
-            LinkedIn <ArrowUpRight />
-          </a>
+            <div className="hero-links">
+              <button type="button" className="hero-link" onClick={onOpenCmdK}>Explore this site</button>
+              <a className="hero-link" href={person.github} target="_blank" rel="noreferrer">
+                GitHub <ArrowUpRight />
+              </a>
+              <a className="hero-link" href={person.linkedin} target="_blank" rel="noreferrer">
+                LinkedIn <ArrowUpRight />
+              </a>
+            </div>
+
+            <dl className="hero-stats">
+              {stats.map(({ k, v }) => (
+                <div key={k} className="hero-stat">
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
 
-        <div
-          className="hero-marquee mt-[60px] pt-6 border-t border-line w-[80vw] max-w-[1400px]"
-          style={{ marginLeft: 'calc(50% - 40vw)', marginRight: 'calc(50% - 40vw)', alignSelf: 'center' }}
-        >
+        <div className="hero-marquee pt-5 border-t border-line">
           <div className="hero-marquee-track inline-flex animate-marquee font-display text-[20px] sm:text-[24px] md:text-[28px] font-normal text-ink-3 tracking-[-0.02em]">
             <span className="italic mr-10">full-stack</span>
             <span className="italic mr-10">mobile</span>

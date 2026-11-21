@@ -40,3 +40,6 @@ test-results/
 blob-report/
 playwright/.cache/
 playwright/.auth/
+
+# avatar source files: kept locally, never deployed (production uses public/models)
+assets/avatar/

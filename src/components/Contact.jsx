@@ -229,6 +229,7 @@ export function Contact() {
           </div>
           <div className="mt-10 pt-5 border-t border-line flex justify-between flex-wrap gap-2 font-display italic text-[13.5px] text-ink-3">
             <span>© {new Date().getFullYear()} Rith Seyhak · All rights reserved</span>
+            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer" className="transition-colors hover:text-ink">3D model created with Meshy – CC BY 4.0</a>
             <span>Built with care · Phnom Penh, KH</span>
           </div>
         </div>
