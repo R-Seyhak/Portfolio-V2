@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { PORTFOLIO } from '../data.js';
+import { useTilt } from './motion.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -67,6 +68,7 @@ function useAboutMotion() {
 export function About() {
   const { person } = PORTFOLIO;
   const { rootRef, figRef } = useAboutMotion();
+  const tiltRef = useTilt({ max: 3 });
 
   const facts = [
     { k: 'Based in', v: person.location },
@@ -97,16 +99,21 @@ export function About() {
         <div className="ab-body">
           <div className="ab-left">
             <figure className="ab-figure" ref={figRef} data-reveal>
-              <div className="ab-portrait">
-                <div className="ab-portrait-par">
-                  <img
-                    src="/photos/about.png"
-                    alt="Portrait of Rith Seyhak"
-                    width={850}
-                    height={1106}
-                    loading="lazy"
-                    decoding="async"
-                  />
+              <div className="ab-depth" ref={tiltRef}>
+                <span className="ab-frame" aria-hidden="true"><i /></span>
+                <div className="ab-card" data-tilt>
+                  <div className="ab-portrait">
+                    <div className="ab-portrait-par">
+                      <img
+                        src="/photos/about.png"
+                        alt="Portrait of Rith Seyhak"
+                        width={850}
+                        height={1106}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <figcaption className="ab-caption">

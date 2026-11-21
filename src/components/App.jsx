@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMouse } from './primitives.jsx';
+import { useSectionHeaderReveal } from './motion.js';
 import { TopBar, LeftRail, CmdK } from './Chrome.jsx';
 import { Hero } from './Hero.jsx';
 import { About } from './About.jsx';
@@ -26,7 +27,8 @@ export function App() {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [activeTech, setActiveTech] = useState(null);
 
-  useMouse();
+  useMouse(tweakState.cursorGlow);
+  useSectionHeaderReveal();
 
   useEffect(() => {
     const r = document.documentElement;

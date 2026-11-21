@@ -108,15 +108,16 @@ export function useActiveSection(ids) {
   return active;
 }
 
-export function useMouse() {
+export function useMouse(enabled = true) {
   useEffect(() => {
+    if (!enabled) return;   // writing to :root on every move restyles the whole page
     const onMove = (e) => {
       document.documentElement.style.setProperty("--mx", e.clientX + "px");
       document.documentElement.style.setProperty("--my", e.clientY + "px");
     };
     window.addEventListener("pointermove", onMove);
     return () => window.removeEventListener("pointermove", onMove);
-  }, []);
+  }, [enabled]);
 }
 
 export function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }

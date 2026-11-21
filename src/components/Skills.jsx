@@ -11,6 +11,7 @@ import {
 import { FaJava } from 'react-icons/fa';
 import { PORTFOLIO } from '../data.js';
 import { useReveal, cn } from './primitives.jsx';
+import { useLiveWhileVisible } from './motion.js';
 
 function LocalIcon({ src, alt }) {
   return <img src={src} alt={alt} width={44} height={44} style={{ objectFit: 'contain' }} />;
@@ -52,6 +53,7 @@ export function Skills({ activeTech, onTechClick }) {
   const { skills, categories } = PORTFOLIO;
   const [cat, setCat] = useState('all');
   const ref = useReveal();
+  const gridRef = useLiveWhileVisible();
   const filterRef = useRef(null);
   const pillRefs = useRef({});
   const [indicator, setIndicator] = useState(null);
@@ -120,8 +122,9 @@ export function Skills({ activeTech, onTechClick }) {
                 <button
                   key={c.id}
                   ref={(el) => { if (el) pillRefs.current[c.id] = el; }}
+                  aria-pressed={isActive}
                   className={cn(
-                    'relative px-4 py-2 border rounded-full text-[13px] font-sans inline-flex items-center gap-2 transition-colors duration-500',
+                    'sk-filter relative px-4 py-2 border rounded-full text-[13px] font-sans inline-flex items-center gap-2',
                     isActive && !indicator
                       ? 'bg-ink text-bg border-ink'
                       : 'bg-bg border-line text-ink-2 hover:border-ink-3 hover:text-ink'
@@ -135,8 +138,8 @@ export function Skills({ activeTech, onTechClick }) {
             })}
           </div>
 
-          <div className="skills-icon-grid">
-            {filtered.map((s) => {
+          <div className="skills-icon-grid" ref={gridRef}>
+            {filtered.map((s, i) => {
               const meta = SKILL_ICONS[s.name];
               if (!meta) return null;
               const dim = activeTech && !activeTech.includes(s.name);
@@ -144,13 +147,21 @@ export function Skills({ activeTech, onTechClick }) {
                 <div
                   key={s.name}
                   className={cn(
-                    'skill-icon-tile flex flex-col items-center gap-2.5 py-5 px-2 pb-4 rounded-design cursor-default transition-[transform,background] hover:-translate-y-1 hover:bg-bg',
+                    'skill-icon-tile flex flex-col items-center gap-2.5 py-5 px-2 pb-4 rounded-design cursor-default',
                     dim && 'dim'
                   )}
+                  // Only a handful of icons drift, each on its own slow rhythm.
+                  data-float={i % 6 === 2 ? '' : undefined}
+                  style={{ '--sk-turn': i % 2 ? 1 : -1, '--sk-dur': `${6.5 + (i % 4) * 0.8}s`, '--sk-delay': `${-i * 0.7}s` }}
                   onClick={() => onTechClick && onTechClick(s.name)}
                 >
-                  <div className="flex items-center justify-center w-[52px] h-[52px]">{meta.icon}</div>
-                  <span className="font-display italic text-[13.5px] text-ink-2 text-center leading-[1.3]">{s.name}</span>
+                  <div className="sk-icon">
+                    <span className="sk-tip" aria-hidden="true">{s.name}</span>
+                    <div className="sk-float">
+                      <div className="sk-glyph">{meta.icon}</div>
+                    </div>
+                  </div>
+                  <span className="sk-name font-display italic text-[13.5px] text-ink-2 text-center leading-[1.3]">{s.name}</span>
                 </div>
               );
             })}

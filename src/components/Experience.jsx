@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { PORTFOLIO } from '../data.js';
-import { useReveal, Icon } from './primitives.jsx';
+import { Icon } from './primitives.jsx';
+import { useTimeline } from './motion.js';
 
 export function Experience() {
   const { experience } = PORTFOLIO;
   const [certOpen, setCertOpen] = useState(false);
-  const ref = useReveal();
+  const timelineRef = useTimeline();
 
   return (
     <section id="experience" className="py-[var(--section-y)] relative bg-bg-2">
@@ -24,17 +25,18 @@ export function Experience() {
           </div>
         </div>
 
-        <div className="reveal" ref={ref}>
-          <div className="timeline">
+        <div>
+          <div className="timeline" ref={timelineRef}>
+            <span className="timeline-fill" aria-hidden="true" />
             {experience.map((e) => (
               <div key={e.id} className="timeline-item" data-type={e.type}>
-                <div className="font-display italic text-[14px] text-ink-3 pt-1">
-                  {e.type}
-                  <span className="block text-ink font-medium mt-1 text-[14px] whitespace-nowrap">{e.duration}</span>
+                <div className="tl-when font-display italic text-[14px] text-ink-3 pt-1">
+                  <span className="capitalize">{e.type}</span>
+                  <span className="tl-date block text-ink font-medium mt-1 text-[14px] whitespace-nowrap">{e.duration}</span>
                 </div>
                 <div className="timeline-body">
                   <h4 className="font-display text-[24px] font-medium tracking-[-0.02em] leading-[1.2]">{e.role}</h4>
-                  <div className="mt-1 text-[14px] text-ink-2">{e.org} · {e.location}</div>
+                  <div className="mt-1.5 text-[14px] text-ink-3"><span className="font-medium text-ink-2">{e.org}</span> · {e.location}</div>
                   <p className="mt-3.5 text-[15px] text-ink-2 leading-relaxed max-w-[620px]">{e.description}</p>
                   {e.highlights && (
                     <ul className="mt-3 list-none p-0">
@@ -47,7 +49,7 @@ export function Experience() {
                   )}
                   {e.certificate && (
                     <button
-                      className="mt-[18px] inline-flex items-center gap-2 px-3.5 py-[7px] text-[14px] border border-accent text-accent bg-accent-soft rounded-full font-display italic transition-all hover:bg-accent hover:text-white"
+                      className="tl-cert mt-[18px] inline-flex items-center gap-2 px-3.5 py-[7px] text-[14px] border border-accent text-accent bg-accent-soft rounded-full font-display italic hover:bg-accent hover:text-white"
                       onClick={() => setCertOpen(true)}
                     >
                       <Icon.cert /> View certificate

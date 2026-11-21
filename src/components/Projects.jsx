@@ -1,34 +1,15 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import {
-  SiFlutter, SiTypescript, SiExpress, SiPostgresql,
-  SiMongodb, SiReact, SiNodedotjs, SiUnity,
-  SiAngular, SiNestjs, SiRedis, SiSocketdotio, SiDocker,
-  SiPython, SiRaspberrypi, SiFirebase,
-} from 'react-icons/si';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { PORTFOLIO } from '../data.js';
 import { Icon } from './primitives.jsx';
+import { TechPill } from './TechPill.jsx';
+import { useReducedMotion, useTilt } from './motion.js';
 
-const TECH_ICONS = {
-  'Flutter':    <SiFlutter     size={13} color="#02569B" />,
-  'TypeScript': <SiTypescript  size={13} color="#3178C6" />,
-  'Express':    <SiExpress     size={13} color="currentColor" />,
-  'PostgreSQL': <SiPostgresql  size={13} color="#4169E1" />,
-  'MongoDB':    <SiMongodb     size={13} color="#47A248" />,
-  'React':      <SiReact       size={13} color="#61DAFB" />,
-  'Node.js':    <SiNodedotjs   size={13} color="#339933" />,
-  'Unity':      <SiUnity       size={13} color="currentColor" />,
-  'C#':         <img src="/icons/csharp.svg" alt="" width={13} height={13} />,
-  'Angular':      <SiAngular      size={13} color="#DD0031" />,
-  'NestJS':       <SiNestjs       size={13} color="#E0234E" />,
-  'Redis':        <SiRedis        size={13} color="#FF4438" />,
-  'Socket.IO':    <SiSocketdotio  size={13} color="currentColor" />,
-  'Docker':       <SiDocker       size={13} color="#2496ED" />,
-  'Python':       <SiPython       size={13} color="#3776AB" />,
-  'Raspberry Pi': <SiRaspberrypi  size={13} color="#A22846" />,
-  'Firebase':     <SiFirebase     size={13} color="#FFCA28" />,
-};
+// Loaded on first hover / focus of a thumbnail, so it costs nothing up front.
+const loadShowcase = () => import('./ProjectShowcase.jsx');
+const ProjectShowcase = dynamic(loadShowcase, { ssr: false });
 
 /* ---------------------------------------------------------------------------
    Scroll → slide stepping
@@ -55,18 +36,6 @@ const STEP_GAP = 650;      // ms between steps, so each transition lands
 const SWIPE_MIN = 44;      // px of finger travel for a touch step
 
 const pad = (n) => String(n).padStart(2, '0');
-
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setReduced(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
-  return reduced;
-}
 
 function useProjectSteps(count, titles, reduced) {
   const refs = useRef({ track: null, scene: null, hudIndex: null, hudTitle: null, projects: [], titles: [] });
@@ -232,7 +201,7 @@ function useProjectSteps(count, titles, reduced) {
       if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
       const t = e.target;
       if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
-      if (t?.closest?.('[data-native-scroll]')) return;   // e.g. the screenshot viewer
+      if (t?.closest?.('[data-native-scroll]') || document.querySelector('dialog[open]')) return;   // e.g. the project showcase
       let dir = 0;
       if (e.key === 'ArrowDown' || e.key === 'PageDown') dir = 1;
       else if (e.key === 'ArrowUp' || e.key === 'PageUp') dir = -1;
@@ -291,145 +260,20 @@ function useProjectSteps(count, titles, reduced) {
     root.style.scrollBehavior = behavior;
   }, [reduced]);
 
-  return { refs, focusProject };
-}
-
-/* ---------------------------------------------------------------------------
-   Screenshot viewer
-   A modal <dialog> (focus stays inside, Esc closes, focus returns to the
-   thumbnail). The image grows out of the thumbnail and shrinks back into it
-   on close. The image is sized in JS from the thumbnail's natural size, so the
-   open animation never waits for a load; it is never scaled past 100%.
-   --------------------------------------------------------------------------- */
-const VIEW_EASE = 'cubic-bezier(.2,.8,.2,1)';
-
-function ShotViewer({ project, index, count, origin, reduced, onClose }) {
-  const dlgRef = useRef(null);
-  const stageRef = useRef(null);
-  const imgRef = useRef(null);
-  const closing = useRef(false);
-
-  const fit = useCallback(() => {
-    const stage = stageRef.current;
-    const img = imgRef.current;
-    if (!stage || !img) return;
-    const w = origin?.naturalWidth || img.naturalWidth || 1600;
-    const h = origin?.naturalHeight || img.naturalHeight || 1000;
-    const k = Math.min(stage.clientWidth / w, stage.clientHeight / h, 1);
-    img.style.width = `${Math.round(w * k)}px`;
-    img.style.height = `${Math.round(h * k)}px`;
-  }, [origin]);
-
-  // Transform that puts the viewer image exactly over the thumbnail.
-  const toThumb = useCallback(() => {
-    const img = imgRef.current;
-    if (!img || !origin?.isConnected) return null;
-    const a = origin.getBoundingClientRect();
-    const b = img.getBoundingClientRect();
-    if (!a.width || !b.width) return null;
-    const dx = a.left + a.width / 2 - (b.left + b.width / 2);
-    const dy = a.top + a.height / 2 - (b.top + b.height / 2);
-    return `translate(${dx}px, ${dy}px) scale(${a.width / b.width}, ${a.height / b.height})`;
-  }, [origin]);
-
-  // Open: lock the page, show the dialog, grow the image out of the thumbnail.
-  useLayoutEffect(() => {
-    const dlg = dlgRef.current;
-    const root = document.documentElement;
-    const body = document.body;
-    const prev = { overflow: body.style.overflow, gutter: root.style.scrollbarGutter };
-    root.style.scrollbarGutter = 'stable';   // no layout shift when the scrollbar hides
-    body.style.overflow = 'hidden';
-    if (!dlg.open) dlg.showModal();
-    fit();
-
-    if (!reduced) {
-      const from = toThumb();
-      imgRef.current.animate(
-        from
-          ? [{ transform: from }, { transform: 'none' }]
-          : [{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }],
-        { duration: 560, easing: VIEW_EASE }
-      );
-      dlg.querySelectorAll('[data-fade]').forEach((el) => {
-        el.animate([{ opacity: 0 }, { opacity: 1 }], {
-          duration: 320, easing: 'ease', delay: Number(el.dataset.fade) || 0, fill: 'backwards',
-        });
-      });
-    }
-
-    const onResize = () => fit();
-    window.addEventListener('resize', onResize);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      dlg.getAnimations({ subtree: true }).forEach((a) => a.cancel());
-      body.style.overflow = prev.overflow;
-      root.style.scrollbarGutter = prev.gutter;
-    };
-  }, [fit, toThumb, reduced]);
-
-  // Close: shrink back into the thumbnail while the backdrop fades.
-  const requestClose = useCallback(() => {
-    if (closing.current) return;
-    closing.current = true;
-    const dlg = dlgRef.current;
-    const finish = () => { if (dlg.open) dlg.close(); onClose(); };
-    if (reduced) { finish(); return; }
-    const to = toThumb();
-    const anims = [
-      imgRef.current.animate(
-        to
-          ? [{ transform: 'none' }, { transform: to }]
-          : [{ opacity: 1 }, { opacity: 0, transform: 'scale(.97)' }],
-        { duration: to ? 440 : 220, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }
-      ),
-    ];
-    dlg.querySelectorAll('[data-fade]').forEach((el) => {
-      anims.push(el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: 'ease', fill: 'forwards' }));
-    });
-    Promise.all(anims.map((a) => a.finished)).then(finish, finish);
-  }, [onClose, reduced, toThumb]);
-
+  // Only follow focus that a Tab press moved here. Focus also fires when the
+  // window regains it, and following that would yank the page back to Projects
+  // from wherever the visitor has since scrolled.
+  const tabbedAt = useRef(-Infinity);
   useEffect(() => {
-    const dlg = dlgRef.current;
-    const onCancel = (e) => { e.preventDefault(); requestClose(); };              // Esc
-    const onNativeClose = () => { if (!closing.current) { closing.current = true; onClose(); } };
-    dlg.addEventListener('cancel', onCancel);
-    dlg.addEventListener('close', onNativeClose);
-    return () => {
-      dlg.removeEventListener('cancel', onCancel);
-      dlg.removeEventListener('close', onNativeClose);
-    };
-  }, [requestClose, onClose]);
+    const onTab = (e) => { if (e.key === 'Tab') tabbedAt.current = performance.now(); };
+    window.addEventListener('keydown', onTab, true);
+    return () => window.removeEventListener('keydown', onTab, true);
+  }, []);
+  const followTabFocus = useCallback((i) => {
+    if (performance.now() - tabbedAt.current < 400) focusProject(i);
+  }, [focusProject]);
 
-  return (
-    <dialog
-      ref={dlgRef}
-      className="pj-viewer"
-      aria-label={`${project.title} screenshot`}
-      data-native-scroll
-      onClick={(e) => { if (e.target !== imgRef.current) requestClose(); }}
-    >
-      <div className="pj-viewer-backdrop" data-fade="0" aria-hidden="true" />
-      <div className="pj-viewer-bar" data-fade="120">
-        <p className="pj-viewer-meta">
-          <b>{pad(index + 1)} / {pad(count)}</b>
-          <span className="pj-label-rule" aria-hidden="true" />
-          <span>{project.year} · {project.tag}</span>
-        </p>
-        <button type="button" className="pj-viewer-close">
-          Close <kbd>Esc</kbd>
-        </button>
-      </div>
-      <div className="pj-viewer-stage" ref={stageRef}>
-        <img ref={imgRef} className="pj-viewer-img" src={project.image} alt={`${project.title} screenshot`} decoding="async" />
-      </div>
-      <div className="pj-viewer-caption" data-fade="160">
-        <p className="pj-viewer-title">{project.title}</p>
-        <Roles project={project} className="pj-roles pj-roles--viewer" />
-      </div>
-    </dialog>
-  );
+  return { refs, focusProject, followTabFocus };
 }
 
 /** Your part in the project, from `roles` in data.js (a string or a list). */
@@ -450,6 +294,42 @@ function Roles({ project, className = 'pj-roles' }) {
   );
 }
 
+/** The thumbnail: lifts and tilts toward the cursor; opens the showcase. */
+function ProjectShot({ project, onOpen }) {
+  const hostRef = useTilt({ max: 4 });
+  return (
+    <figure className="pj-shot" ref={hostRef}>
+      {project.image && (
+        <button
+          type="button"
+          className="pj-shot-open"
+          data-tilt
+          aria-haspopup="dialog"
+          aria-label={`Open ${project.title} project showcase`}
+          onClick={onOpen}
+          onPointerEnter={loadShowcase}
+          onFocus={loadShowcase}
+        >
+          <img
+            src={project.image}
+            alt=""
+            width={project.imageSize?.[0]}
+            height={project.imageSize?.[1]}
+            loading="lazy"
+            decoding="async"
+          />
+          <span className="pj-shot-sheen" aria-hidden="true" />
+          <span className="pj-shot-mark" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" />
+            </svg>
+          </span>
+        </button>
+      )}
+    </figure>
+  );
+}
+
 function ProjectInfo({ project, onTechHover, onTechLeave }) {
   const titleId = `project-${project.id}-title`;
   return (
@@ -464,6 +344,7 @@ function ProjectInfo({ project, onTechHover, onTechLeave }) {
       </h3>
       <Roles project={project} />
       <p className="pj-summary">{project.summary}</p>
+      {project.contribution && <p className="pj-did">{project.contribution}</p>}
 
       {project.features?.length > 0 && (
         <ul className="pj-features" role="list">
@@ -473,15 +354,12 @@ function ProjectInfo({ project, onTechHover, onTechLeave }) {
 
       <div className="pj-tech">
         {project.tech.map((t) => (
-          <span
+          <TechPill
             key={t}
-            className="pj-pill"
+            name={t}
             onMouseEnter={() => onTechHover && onTechHover([t])}
             onMouseLeave={() => onTechLeave && onTechLeave()}
-          >
-            {TECH_ICONS[t]}
-            {t}
-          </span>
+          />
         ))}
       </div>
 
@@ -511,11 +389,15 @@ export function Projects({ onTechHover, onTechLeave }) {
   const titles = useMemo(() => timeline.map((p) => p.title), [timeline]);
 
   const reduced = useReducedMotion();
-  const { refs, focusProject } = useProjectSteps(n, titles, reduced);
+  const { refs, focusProject, followTabFocus } = useProjectSteps(n, titles, reduced);
   const R = refs.current;
 
-  const [viewer, setViewer] = useState(null);   // { index, origin: <img> }
-  const closeViewer = useCallback(() => setViewer(null), []);
+  const [showcase, setShowcase] = useState(null);   // index of the open project
+  const closeShowcase = useCallback((i) => {
+    setShowcase(null);
+    focusProject(i);
+    refs.current.projects[i]?.querySelector('.pj-shot-open')?.focus({ preventScroll: !reduced });
+  }, [focusProject, refs, reduced]);
 
   return (
     <section id="projects" className="pt-[var(--section-y)] relative bg-bg">
@@ -549,20 +431,9 @@ export function Projects({ onTechHover, onTechLeave }) {
                     data-flip={i % 2 === 1 ? '' : undefined}
                     style={{ '--i': i }}
                     ref={(el) => { R.projects[i] = el; }}
-                    onFocus={() => focusProject(i)}
+                    onFocus={() => followTabFocus(i)}
                   >
-                    <figure className="pj-shot">
-                      {p.image && (
-                        <button
-                          type="button"
-                          className="pj-shot-open"
-                          aria-label={`View ${p.title} screenshot full screen`}
-                          onClick={(e) => setViewer({ index: i, origin: e.currentTarget.querySelector('img') })}
-                        >
-                          <img src={p.image} alt="" loading="lazy" decoding="async" />
-                        </button>
-                      )}
-                    </figure>
+                    <ProjectShot project={p} onOpen={() => setShowcase(i)} />
                     <ProjectInfo project={p} onTechHover={onTechHover} onTechLeave={onTechLeave} />
                   </li>
                 ))}
@@ -603,15 +474,12 @@ export function Projects({ onTechHover, onTechLeave }) {
         </div>
       </div>
 
-      {viewer && (
-        <ShotViewer
-          key={timeline[viewer.index].id}
-          project={timeline[viewer.index]}
-          index={viewer.index}
-          count={n}
-          origin={viewer.origin}
+      {showcase !== null && (
+        <ProjectShowcase
+          projects={timeline}
+          startIndex={showcase}
           reduced={reduced}
-          onClose={closeViewer}
+          onClose={closeShowcase}
         />
       )}
     </section>

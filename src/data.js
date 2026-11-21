@@ -70,7 +70,17 @@ export const PORTFOLIO = {
 
   projects: [
     // roles: your part in each project, shown under the title and in the
-    // full-screen viewer. One or more, e.g. ["Frontend Developer", "UI Designer"].
+    // showcase. One or more, e.g. ["Frontend Developer", "UI Designer"].
+    // contribution: one sentence on what you personally did.
+    // team: who it was built with.
+    //
+    // imageSize: the image's real [width, height], so its space is reserved while it loads.
+    //
+    // Optional, shown in the showcase only when present:
+    //   images: ["/photos/a.png", "/photos/b.png"]   gallery (defaults to image)
+    //   live: "https://…"                            live demo link
+    //   implementation: ["…"]                        notable technical details
+    //   challenges: ["…"]                            problems you solved
     //
     // Cover images and project facts from chanraksa.com (team projects built
     // at CamCyber Digital Tech Team). No public link, so no "See project".
@@ -87,8 +97,11 @@ export const PORTFOLIO = {
         "Digital civil-servant records",
         "Web and mobile apps",
       ],
+      contribution: "Worked full-stack on the system, delivering web, mobile and API work.",
+      team: "CamCyber Digital Tech Team",
       tech: ["Angular", "NestJS", "Flutter", "PostgreSQL", "Redis", "Socket.IO", "Docker"],
       image: "/photos/mlmupc-hrm.jpg",
+      imageSize: [1600, 1000],
       hue: 220,
       tag: "HR · Government",
     },
@@ -105,8 +118,11 @@ export const PORTFOLIO = {
         "Real-time check-ins",
         "Web, mobile and scanner terminals",
       ],
+      contribution: "Worked full-stack on the system, delivering web, mobile and API work.",
+      team: "CamCyber Digital Tech Team",
       tech: ["Angular", "NestJS", "Flutter", "PostgreSQL", "Socket.IO", "Python", "Raspberry Pi"],
       image: "/photos/nis-hrm.jpg",
+      imageSize: [1600, 1000],
       hue: 265,
       tag: "HR · Government",
     },
@@ -123,8 +139,10 @@ export const PORTFOLIO = {
         "Every community on one platform",
         "Mobile and web",
       ],
+      team: "CamCyber Digital Tech Team",
       tech: ["Flutter", "Angular", "NestJS", "PostgreSQL", "Redis", "Firebase", "Socket.IO"],
       image: "/photos/phumiyerng.jpg",
+      imageSize: [1600, 1000],
       hue: 145,
       tag: "Tourism · Marketplace",
     },
@@ -136,7 +154,8 @@ export const PORTFOLIO = {
       summary:
         "A pay-as-you-go point-of-sale platform with a distinctly modern UI and streamlined checkout flow.",
       detail:
-        "Built to help small retailers run their shop without committing to heavy software contracts. Priced per transaction, not per seat. I led the frontend design system and built the checkout + inventory flows end-to-end.",
+        "Built to help small retailers run their shop without committing to heavy software contracts. Priced per transaction, not per seat.",
+      contribution: "Led the frontend design system and built the checkout and inventory flows end-to-end.",
       features: [
         "Pay-as-you-go pricing model",
         "Intuitive sales and checkout flow",
@@ -146,6 +165,7 @@ export const PORTFOLIO = {
       tech: ["Flutter", "TypeScript", "Express", "PostgreSQL"],
       href: "https://github.com/Zorng/ModulaFrontend.git",
       image: "/photos/modulapos.png",
+      imageSize: [1919, 909],
       hue: 40,
       tag: "POS · SaaS",
       icon: "cart",
@@ -158,7 +178,8 @@ export const PORTFOLIO = {
       summary:
         "A Spotify-style dashboard clone with full playback, playlists, and a responsive player.",
       detail:
-        "End-to-end MERN rebuild of Spotify's core listening experience. Persistent playback across routes, playlist CRUD, and a mini-player that follows you around the app.",
+        "A MERN rebuild of Spotify's core listening experience.",
+      contribution: "Built it end-to-end, with persistent playback across routes, playlist CRUD, and a mini-player that follows you around the app.",
       features: [
         "Music playback with player controls",
         "Playlist creation and management",
@@ -168,6 +189,7 @@ export const PORTFOLIO = {
       tech: ["MongoDB", "Express", "React", "Node.js"],
       href: "https://github.com/R-Seyhak/Melodia-Spotify-clone-.git",
       image: "/photos/spotify-clone.png",
+      imageSize: [1771, 887],
       hue: 250,
       tag: "Music · Web",
       icon: "music",
@@ -180,7 +202,8 @@ export const PORTFOLIO = {
       summary:
         "A 3D strategic tower defense game with wave-based enemies and upgradable towers.",
       detail:
-        "Built in Unity. Designed the wave balancing curve and the tower upgrade tree; wrote the AI pathfinding and the economy loop.",
+        "Built in Unity.",
+      contribution: "Designed the wave balancing curve and the tower upgrade tree; wrote the AI pathfinding and the economy loop.",
       features: [
         "3D strategic tower placement and upgrades",
         "Wave-based enemy system",
@@ -190,6 +213,7 @@ export const PORTFOLIO = {
       tech: ["Unity", "C#"],
       href: "https://github.com/Ra-Fat/Frost-Guard.git",
       image: "/photos/Frostguard.png",
+      imageSize: [1785, 844],
       hue: 200,
       tag: "Game · 3D",
       icon: "shield",
