@@ -46,6 +46,20 @@ export const BLINK = {
   doubleGapMs: 380,
 } as const;
 
+/** Calms the GreetingWave clip in memory. The GLB file itself is not changed. */
+export const WAVE = {
+  clip: 'GreetingWave',
+  /** The stretch of the clip where the arm is up and waving. */
+  startSec: 0.62,
+  settledSec: 0.92,
+  endingSec: 2.18,
+  endSec: 2.5,
+  /** Length of one wave in the clip. */
+  periodSec: 0.53,
+  /** How much of the forearm's original sway to keep: 0 is still, 1 is unchanged. */
+  forearmSway: 0.6,
+} as const;
+
 /** The head on the model, in metres. Places the question marks and Zzz. */
 export const HEAD_ANCHOR = { center: [0, 1.22, 0.02], halfWidth: 0.2, top: 1.4 } as const;
 

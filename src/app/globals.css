@@ -1514,12 +1514,15 @@
 .hero-shell { max-width: 1320px; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); }
 .hero-marquee { margin-top: 32px; }
+/* The entrance is movement only: the loading screen's fade handles the opacity */
 .hero-intro, .hero-details { animation: hero-rise .75s var(--hero-ease) both; }
-.hero-details { animation-delay: .1s; }
+.hero-details { animation-delay: .05s; }
 @keyframes hero-rise {
-  from { opacity: .001; transform: translateY(14px); }
-  to   { opacity: 1; transform: none; }
+  from { transform: translateY(12px); }
+  to   { transform: none; }
 }
+html[data-site-loading] :is(.hero-intro, .hero-details, .av-visual) { animation-play-state: paused; }
+html[data-site-loading] :is(.av-canvas, .av-fallback) { transition: none; }
 .hero-lede { margin-top: 8px; }
 .hero-stats { margin-top: 30px; }
 
@@ -1559,11 +1562,12 @@
 }
 .av-visual {
   position: absolute; inset: 0;
-  animation: av-enter 1s var(--hero-ease) .18s both;
+  animation: av-enter .85s var(--hero-ease) both;
 }
+/* No scale here: the canvas measures this box while the entrance is held. */
 @keyframes av-enter {
-  from { opacity: 0; transform: translateY(18px) scale(.975); }
-  to   { opacity: 1; transform: none; }
+  from { transform: translateY(12px); }
+  to   { transform: none; }
 }
 .av-fallback {
   position: absolute; left: 50%; bottom: 7%;

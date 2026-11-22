@@ -1,4 +1,6 @@
 import './globals.css';
+import { SiteLoader } from '../components/loader/SiteLoader';
+import { FONT_STYLESHEET } from '../components/loader/loader.config';
 
 export const metadata = {
   title: 'Rith Seyhak — Software Engineer',
@@ -14,16 +16,20 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="paper" data-density="roomy">
+    // The loader's inline script marks <html> before React hydrates.
+    <html lang="en" data-theme="paper" data-density="roomy" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&display=swap"
-          rel="stylesheet"
-        />
+        {/* The loader adds this stylesheet itself, so fonts can't delay its first paint. */}
+        <noscript>
+          <link href={FONT_STYLESHEET} rel="stylesheet" />
+        </noscript>
       </head>
-      <body>{children}</body>
+      <body>
+        <SiteLoader />
+        {children}
+      </body>
     </html>
   );
 }

@@ -6,6 +6,12 @@ import type { ReactNode, RefObject } from 'react';
 import { AvatarEffects } from './AvatarEffects';
 import { AvatarFallback } from './AvatarFallback';
 import { AvatarLoader } from './AvatarLoader';
+import {
+  cancelModelDownload,
+  isSiteRevealed,
+  loaderDone,
+  useSiteRevealed,
+} from '../loader/loaderClient';
 import { ANIMATION, AVATAR_LABEL, POINTER } from './avatar.config';
 import type { LookTarget, RithAvatarHandle } from './avatar.types';
 import { useAvatarBehavior } from './useAvatarBehavior';
@@ -48,6 +54,13 @@ function supportsWebGL() {
 
 const clampUnit = (value: number) => Math.max(-1, Math.min(1, value));
 
+/** The loading screen only waits for the avatar when the visitor lands on the Hero. */
+function landsOnHero(stage: HTMLElement | null) {
+  if (!stage || (window.location.hash && window.location.hash !== '#home')) return false;
+  const rect = stage.getBoundingClientRect();
+  return rect.top < window.innerHeight + 400 && rect.bottom > -400;
+}
+
 /**
  * The Hero's right column. The static image is server-rendered so the layout
  * is complete on first paint; the 3D bundle loads afterwards and fades in.
@@ -61,39 +74,68 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
   const [state, setState] = useState<StageState>('static');
   const reducedMotion = usePrefersReducedMotion();
   const pageVisible = usePageVisible();
-  const nearView = useInView(stageRef, { rootMargin: '400px', once: true });
+  const nearView = useInView(stageRef, { rootMargin: '400px' });
   const onScreen = useInView(stageRef);
   const mostlyOnScreen = useInView(stageRef, { threshold: 0.45 });
   const active = onScreen && pageVisible;
-  const { mode, activate } = useAvatarBehavior(avatarRef, state === 'live', active);
+  const revealed = useSiteRevealed();
+  // Nothing behind the loading screen counts toward the 30-second sleep timer.
+  const { mode, activate } = useAvatarBehavior(avatarRef, state === 'live', active && revealed);
 
   const showStatic = useCallback(() => setState('static'), []);
-  const markReady = useCallback(() => setState('live'), []);
+  const markReady = useCallback(() => {
+    setState('live');
+    loaderDone('code', 'model', 'scene');
+  }, []);
 
-  // Start the 3D download only after the page's main content has settled.
+  // Without 3D, the loading screen waits for the static image instead.
+  const settleOnFallback = useCallback(() => {
+    const finish = () => loaderDone('code', 'model', 'scene');
+    const image = stageRef.current?.querySelector('img');
+    if (image) image.decode().then(finish, finish);
+    else finish();
+  }, []);
+
+  const waitsForAvatar = useRef(false);
+  useEffect(() => {
+    loaderDone('app');
+    waitsForAvatar.current = !isSiteRevealed() && landsOnHero(stageRef.current);
+    if (!waitsForAvatar.current) loaderDone('code', 'model', 'scene');
+  }, []);
+
+  // Behind the loading screen the 3D starts at once. Otherwise it waits for idle time.
   const [shouldMount, setShouldMount] = useState(false);
   const gaveUp = useRef(false);
   useEffect(() => {
-    if (!nearView || shouldMount || gaveUp.current) return;
+    // A direct link to another section can still be scrolling there until the reveal.
+    const scrolledNear = nearView && revealed;
+    if (shouldMount || gaveUp.current || (!scrolledNear && !waitsForAvatar.current)) return;
     if (!supportsWebGL()) {
       gaveUp.current = true;
+      cancelModelDownload(); // No WebGL, so don't spend the visitor's data on the model.
+      settleOnFallback();
       return;
     }
     const start = () => {
       setState('loading');
       setShouldMount(true);
     };
+    if (waitsForAvatar.current) {
+      start();
+      return;
+    }
     if ('requestIdleCallback' in window) {
       const id = window.requestIdleCallback(start, { timeout: 1500 });
       return () => window.cancelIdleCallback(id);
     }
     const id = setTimeout(start, 300);
     return () => clearTimeout(id);
-  }, [nearView, shouldMount]);
+  }, [nearView, revealed, shouldMount, settleOnFallback]);
 
-  // Greet once per page visit, after the model is drawn and the Hero is in view.
+  // Greet once per page visit, after the reveal, with the model drawn and in view.
   useEffect(() => {
     if (
+      !revealed ||
       state !== 'live' ||
       mode !== 'idle' ||
       !mostlyOnScreen ||
@@ -108,7 +150,7 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
       avatarRef.current?.play('GreetingWave');
     }, ANIMATION.greetingDelayMs);
     return () => clearTimeout(id);
-  }, [state, mode, mostlyOnScreen, pageVisible, reducedMotion]);
+  }, [revealed, state, mode, mostlyOnScreen, pageVisible, reducedMotion]);
 
   // Keep the question marks and Zzz anchored to the head at any stage size.
   useEffect(() => {
@@ -187,7 +229,8 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
     gaveUp.current = true;
     setShouldMount(false);
     showStatic();
-  }, [showStatic]);
+    settleOnFallback();
+  }, [showStatic, settleOnFallback]);
 
   const smile = (value: number) => avatarRef.current?.setMorph('smile', value);
 
@@ -199,7 +242,7 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
           <AvatarErrorBoundary onError={failed}>
             <AvatarCanvas
               avatarRef={avatarRef}
-              active={active}
+              active={active || state === 'loading'}
               lookTarget={lookTarget}
               reducedMotion={reducedMotion}
               onReady={markReady}

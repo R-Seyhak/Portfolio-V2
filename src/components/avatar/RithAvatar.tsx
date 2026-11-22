@@ -9,8 +9,10 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import type { ThreeElements } from '@react-three/fiber';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { ANIMATION, BLINK, HEAD_ANCHOR, MODEL_URL, POINTER } from './avatar.config';
+import { loaderDone, loaderProgress, takeModelDownload } from '../loader/loaderClient';
+import { ANIMATION, BLINK, HEAD_ANCHOR, MODEL_URL, POINTER, WAVE } from './avatar.config';
 import { applyScratchArm, createScratchArm, scratchArmBones } from './avatarArm';
+import { createCalmWave } from './avatarClips';
 import { advanceGesture, createGestureState, releaseGesture, startGesture } from './avatarGestures';
 import type {
   GestureName,
@@ -62,7 +64,9 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
   const mixer = useMemo(() => new THREE.AnimationMixer(scene), [scene]);
   const actions = useMemo(() => {
     const map: Record<string, THREE.AnimationAction | undefined> = {};
-    for (const clip of animations) map[clip.name] = mixer.clipAction(clip);
+    for (const clip of animations) {
+      map[clip.name] = mixer.clipAction(clip.name === WAVE.clip ? createCalmWave(clip) : clip);
+    }
     return map;
   }, [animations, mixer]);
 
@@ -370,6 +374,36 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
   );
 });
 
-useGLTF.preload(MODEL_URL, USE_DRACO, USE_MESHOPT);
+// Uses the download the loading screen already started, so the model is fetched once.
+// If there isn't one (a direct link to another section), it loads the normal way.
+const useLoaderDownload: NonNullable<Parameters<typeof useGLTF.preload>[3]> = (loader) => {
+  const load = loader.load.bind(loader);
+  loader.load = (url, onLoad, onProgress, onError) => {
+    const finish: typeof onLoad = (gltf) => {
+      loaderDone('model');
+      onLoad(gltf);
+    };
+    const download = takeModelDownload();
+    if (!download) {
+      load(
+        url,
+        finish,
+        (event) => {
+          loaderProgress('model', event.total > 0 ? (event.loaded / event.total) * 0.94 : null);
+          onProgress?.(event);
+        },
+        onError,
+      );
+      return;
+    }
+    download.then(
+      (bytes) => loader.parse(bytes, THREE.LoaderUtils.extractUrlBase(url), finish, onError),
+      (error: unknown) => onError?.(error as ErrorEvent),
+    );
+  };
+};
+
+loaderDone('code');
+useGLTF.preload(MODEL_URL, USE_DRACO, USE_MESHOPT, useLoaderDownload);
 
 export default RithAvatar;
