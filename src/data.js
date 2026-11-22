@@ -227,8 +227,8 @@ export const PORTFOLIO = {
       role: "Full-Stack Developer Intern",
       org: "CamCyber Digital Tech Team",
       location: "Phnom Penh, Cambodia",
-      duration: "May 2025 — Nov 2026",
-      year_start: 2025,
+      duration: "May 2026 — Present",
+      year_start: 2026,
       year_end: 2026,
       description:
         "A startup building national-scale platforms for government ministries, from HR systems serving thousands of civil servants to nurse licensing and a World Bank-backed tourism app.",
