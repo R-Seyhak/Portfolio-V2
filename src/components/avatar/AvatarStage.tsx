@@ -15,6 +15,7 @@ import {
 import { ANIMATION, AVATAR_LABEL, POINTER } from './avatar.config';
 import type { LookTarget, RithAvatarHandle } from './avatar.types';
 import { useAvatarBehavior } from './useAvatarBehavior';
+import { useAvatarDrag } from './useAvatarDrag';
 import { useInView, usePageVisible } from './useInView';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
@@ -79,8 +80,14 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
   const mostlyOnScreen = useInView(stageRef, { threshold: 0.45 });
   const active = onScreen && pageVisible;
   const revealed = useSiteRevealed();
-  // Nothing behind the loading screen counts toward the 30-second sleep timer.
-  const { mode, activate } = useAvatarBehavior(avatarRef, state === 'live', active && revealed);
+  // Nothing behind the loading screen counts toward the idle and sleep timers.
+  const { mode, activate, greet } = useAvatarBehavior(
+    avatarRef,
+    state === 'live',
+    active && revealed,
+    reducedMotion,
+  );
+  const { drag, dragging, handlers: dragHandlers } = useAvatarDrag();
 
   const showStatic = useCallback(() => setState('static'), []);
   const markReady = useCallback(() => {
@@ -146,11 +153,10 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
       return;
     }
     const id = setTimeout(() => {
-      greeted.current = true;
-      avatarRef.current?.play('GreetingWave');
+      greeted.current = greet();
     }, ANIMATION.greetingDelayMs);
     return () => clearTimeout(id);
-  }, [revealed, state, mode, mostlyOnScreen, pageVisible, reducedMotion]);
+  }, [revealed, state, mode, mostlyOnScreen, pageVisible, reducedMotion, greet]);
 
   // Keep the question marks and Zzz anchored to the head at any stage size.
   useEffect(() => {
@@ -168,7 +174,7 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
     return () => window.removeEventListener('resize', place);
   }, [state, mode]);
 
-  // Head and eyes follow a mouse across the Hero, or turn toward the last tap.
+  // Head and eyes follow a mouse across the Hero. Touch has no cursor to follow.
   useEffect(() => {
     const host = trackRef.current;
     const stage = stageRef.current;
@@ -179,7 +185,6 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
     }
 
     let frame = 0;
-    let tapTimer = 0;
     let clientX = 0;
     let clientY = 0;
 
@@ -191,36 +196,23 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
       target.x = clampUnit((clientX - faceX) / (window.innerWidth * 0.5));
       target.y = clampUnit((faceY - clientY) / (window.innerHeight * 0.5));
     };
-    const aim = (event: PointerEvent) => {
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse') return;
       clientX = event.clientX;
       clientY = event.clientY;
       target.active = true;
       if (!frame) frame = requestAnimationFrame(update);
     };
-    const onMove = (event: PointerEvent) => {
-      if (event.pointerType === 'mouse') aim(event);
-    };
     const onLeave = (event: PointerEvent) => {
       if (event.pointerType === 'mouse') target.active = false;
-    };
-    const onDown = (event: PointerEvent) => {
-      if (event.pointerType !== 'touch') return;
-      aim(event);
-      window.clearTimeout(tapTimer);
-      tapTimer = window.setTimeout(() => {
-        target.active = false;
-      }, POINTER.tapHoldMs);
     };
 
     host.addEventListener('pointermove', onMove, { passive: true });
     host.addEventListener('pointerleave', onLeave, { passive: true });
-    host.addEventListener('pointerdown', onDown, { passive: true });
     return () => {
       host.removeEventListener('pointermove', onMove);
       host.removeEventListener('pointerleave', onLeave);
-      host.removeEventListener('pointerdown', onDown);
       cancelAnimationFrame(frame);
-      window.clearTimeout(tapTimer);
       target.active = false;
     };
   }, [state, reducedMotion, trackRef]);
@@ -233,9 +225,18 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
   }, [showStatic, settleOnFallback]);
 
   const smile = (value: number) => avatarRef.current?.setMorph('smile', value);
+  const hoverOn = () => {
+    smile(ANIMATION.hoverSmile);
+    avatarRef.current?.setHover(true);
+    if (mode !== 'sleeping' && mode !== 'fallingAsleep') avatarRef.current?.blink();
+  };
+  const hoverOff = () => {
+    smile(0);
+    avatarRef.current?.setHover(false);
+  };
 
   return (
-    <div ref={stageRef} className="av-stage" data-state={state}>
+    <div ref={stageRef} className="av-stage" data-state={state} data-dragging={dragging || undefined}>
       <div className="av-visual" role="img" aria-label={AVATAR_LABEL}>
         <AvatarFallback />
         {shouldMount && (
@@ -244,6 +245,7 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
               avatarRef={avatarRef}
               active={active || state === 'loading'}
               lookTarget={lookTarget}
+              drag={drag}
               reducedMotion={reducedMotion}
               onReady={markReady}
               onContextLost={failed}
@@ -260,16 +262,17 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
           className="av-hit"
           aria-label={mode === 'sleeping' ? 'Wake up the 3D avatar' : 'Say hello to the 3D avatar'}
           onClick={activate}
+          {...dragHandlers}
           onPointerEnter={(event) => {
-            if (event.pointerType === 'mouse') smile(ANIMATION.hoverSmile);
+            if (event.pointerType === 'mouse') hoverOn();
           }}
           onPointerLeave={(event) => {
-            if (event.pointerType === 'mouse') smile(0);
+            if (event.pointerType === 'mouse') hoverOff();
           }}
           onFocus={(event) => {
-            if (event.currentTarget.matches(':focus-visible')) smile(ANIMATION.hoverSmile);
+            if (event.currentTarget.matches(':focus-visible')) hoverOn();
           }}
-          onBlur={() => smile(0)}
+          onBlur={hoverOff}
         />
       )}
 

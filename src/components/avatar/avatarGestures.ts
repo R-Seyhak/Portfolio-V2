@@ -1,4 +1,4 @@
-import { BRAIN_LOADING, SLEEP } from './avatar.config';
+import { BRAIN_LOADING, IDLE_VARIATION, REACTIONS, SLEEP } from './avatar.config';
 import type { GestureName } from './avatar.types';
 
 /**
@@ -16,8 +16,13 @@ const POSE_KEYS = [
   'eyeYaw',
   'arm',
   'rub',
+  'thumbsArm',
+  'shrugArms',
+  'watchArm',
+  'shoulderLift',
   'browRaise',
   'mouthOpen',
+  'smile',
   'lids',
   'lookMute',
   'expressionMute',
@@ -39,8 +44,13 @@ export const createRestPose = (): GesturePose => ({
   eyeYaw: 0,
   arm: 0,
   rub: 0,
+  thumbsArm: 0,
+  shrugArms: 0,
+  watchArm: 0,
+  shoulderLift: 0,
   browRaise: 0,
   mouthOpen: 0,
+  smile: 0,
   lids: 0,
   lookMute: 0,
   expressionMute: 0,
@@ -182,6 +192,88 @@ const sampleWakingUp: Sampler = (t, reducedMotion, out) => {
   out.lids = reducedMotion ? 0 : at(WAKE.lids, t);
 };
 
+const THUMBS = {
+  arm: [[0, 0], [0.5, 1], [2.1, 1], [2.75, 0]],
+  headRoll: [[0, 0], [0.5, 0.09], [2.1, 0.07], [2.7, 0]],
+  // Two small nods while the thumb is up.
+  headPitch: [[0, 0], [0.55, 0], [0.78, 0.08], [1.02, -0.01], [1.26, 0.06], [1.5, 0]],
+  chestRoll: [[0, 0], [0.5, 0.025], [2.1, 0.025], [2.7, 0]],
+  smile: [[0, 0], [0.45, 0.8], [2.2, 0.8], [2.75, 0]],
+  browRaise: [[0, 0], [0.45, 0.25], [2.2, 0.25], [2.7, 0]],
+  idleSpeed: [[0, 1], [0.4, 0.5], [2.2, 0.5], [2.75, 1]],
+} as const satisfies Record<string, Keys>;
+
+const sampleThumbsUp: Sampler = (t, reducedMotion, out) => {
+  out.thumbsArm = at(THUMBS.arm, t);
+  out.headRoll = at(THUMBS.headRoll, t);
+  out.chestRoll = at(THUMBS.chestRoll, t);
+  out.smile = at(THUMBS.smile, t);
+  out.browRaise = at(THUMBS.browRaise, t);
+  out.idleSpeed = at(THUMBS.idleSpeed, t);
+  out.headPitch = reducedMotion ? 0 : at(THUMBS.headPitch, t);
+};
+
+const SHRUG = {
+  arms: [[0, 0], [0.5, 1], [1.7, 1], [2.35, 0]],
+  shoulders: [[0, 0], [0.42, 1], [0.64, 0.84], [1.6, 0.84], [2.25, 0]],
+  headRoll: [[0, 0], [0.5, -0.15], [1.7, -0.12], [2.3, 0]],
+  headPitch: [[0, 0], [0.5, -0.04], [1.7, -0.03], [2.3, 0]],
+  chestPitch: [[0, 0], [0.5, -0.025], [1.7, -0.025], [2.3, 0]],
+  browRaise: [[0, 0], [0.42, 0.9], [1.7, 0.85], [2.3, 0]],
+  mouthOpen: [[0, 0], [0.5, 0.12], [1.6, 0.1], [2.1, 0]],
+  smile: [[0, 0], [0.5, 0.25], [1.7, 0.25], [2.3, 0]],
+  lookMute: [[0, 0], [0.4, 0.6], [1.8, 0.6], [2.35, 0]],
+  idleSpeed: [[0, 1], [0.4, 0.4], [1.8, 0.4], [2.35, 1]],
+} as const satisfies Record<string, Keys>;
+
+const sampleShrug: Sampler = (t, reducedMotion, out) => {
+  out.shrugArms = at(SHRUG.arms, t);
+  out.shoulderLift = at(SHRUG.shoulders, t);
+  out.headRoll = at(SHRUG.headRoll, t);
+  out.headPitch = at(SHRUG.headPitch, t);
+  out.chestPitch = at(SHRUG.chestPitch, t);
+  out.browRaise = at(SHRUG.browRaise, t);
+  out.mouthOpen = at(SHRUG.mouthOpen, t);
+  out.smile = at(SHRUG.smile, t);
+  out.lookMute = at(SHRUG.lookMute, t);
+  out.idleSpeed = at(SHRUG.idleSpeed, t);
+};
+
+const LOOK_AROUND = {
+  headYaw: [[0, 0], [0.75, -0.4], [1.6, -0.4], [2.35, 0.36], [3.2, 0.36], [3.95, 0]],
+  headPitch: [[0, 0], [0.75, -0.04], [1.6, -0.03], [2.35, 0.02], [3.2, 0.02], [3.95, 0]],
+  // The eyes get there first.
+  eyeYaw: [[0, 0], [0.32, -0.22], [1.35, -0.22], [1.75, 0.24], [2.9, 0.24], [3.55, 0]],
+  lookMute: [[0, 0], [0.4, 1], [3.55, 1], [4.15, 0]],
+} as const satisfies Record<string, Keys>;
+
+const sampleLookAround: Sampler = (t, _reducedMotion, out) => {
+  out.headYaw = at(LOOK_AROUND.headYaw, t);
+  out.headPitch = at(LOOK_AROUND.headPitch, t);
+  out.eyeYaw = at(LOOK_AROUND.eyeYaw, t);
+  out.lookMute = at(LOOK_AROUND.lookMute, t);
+};
+
+const WATCH = {
+  arm: [[0, 0], [0.75, 1], [2.65, 1], [3.5, 0]],
+  headPitch: [[0, 0], [0.72, 0.3], [2.65, 0.28], [3.35, 0]],
+  headYaw: [[0, 0], [0.72, 0.2], [2.65, 0.2], [3.35, 0]],
+  eyePitch: [[0, 0], [0.5, 0.15], [2.65, 0.15], [3.2, 0]],
+  browRaise: [[0, 0], [1.3, 0], [1.6, 0.35], [2.4, 0.3], [2.9, 0]],
+  lookMute: [[0, 0], [0.4, 1], [2.95, 1], [3.55, 0]],
+  idleSpeed: [[0, 1], [0.5, 0.55], [2.8, 0.55], [3.5, 1]],
+} as const satisfies Record<string, Keys>;
+
+const sampleCheckWatch: Sampler = (t, _reducedMotion, out) => {
+  out.watchArm = at(WATCH.arm, t);
+  out.headPitch = at(WATCH.headPitch, t);
+  out.headYaw = at(WATCH.headYaw, t);
+  out.eyePitch = at(WATCH.eyePitch, t);
+  out.browRaise = at(WATCH.browRaise, t);
+  out.lookMute = at(WATCH.lookMute, t);
+  out.idleSpeed = at(WATCH.idleSpeed, t);
+};
+
 interface GestureDefinition {
   duration: number;
   reducedDuration?: number;
@@ -192,6 +284,10 @@ interface GestureDefinition {
 
 const GESTURES: Record<GestureName, GestureDefinition> = {
   brainLoading: { duration: BRAIN_LOADING.durationSec, blendIn: 0.2, sample: sampleBrainLoading },
+  thumbsUp: { duration: REACTIONS.thumbsUpSec, blendIn: 0.12, sample: sampleThumbsUp },
+  shrug: { duration: REACTIONS.shrugSec, blendIn: 0.12, sample: sampleShrug },
+  lookAround: { duration: IDLE_VARIATION.lookAroundSec, blendIn: 0.2, sample: sampleLookAround },
+  checkWatch: { duration: IDLE_VARIATION.checkWatchSec, blendIn: 0.2, sample: sampleCheckWatch },
   fallingAsleep: { duration: SLEEP.fallSec, reducedDuration: SLEEP.fallReducedSec, blendIn: 0.3, sample: sampleFallingAsleep },
   sleeping: { duration: Infinity, blendIn: 0.5, sample: sampleSleeping },
   wakingUp: { duration: SLEEP.wakeSec, blendIn: 0.13, reducedBlendIn: 0.35, sample: sampleWakingUp },

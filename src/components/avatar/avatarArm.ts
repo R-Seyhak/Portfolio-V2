@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SCRATCH_ARM } from './avatar.config';
+import type { ArmGoal, Vec3 } from './avatar.types';
 
 const CHAIN = ['RightShoulder', 'RightUpperArm', 'RightLowerArm', 'RightHand'] as const;
 const FINGERS = ['Index', 'Middle', 'Ring', 'Little'] as const;
@@ -69,6 +70,149 @@ export function createScratchArm(scene: THREE.Object3D, clips: THREE.AnimationCl
 
 export const scratchArmBones = (arm: ScratchArm | null) =>
   arm ? [...arm.links.map((link) => link.bone), ...arm.fingers] : [];
+
+// ---- Posed arms: thumbs-up, shrug and the watch check -----------------------
+
+const JOINTS = ['Proximal', 'Intermediate', 'Distal'] as const;
+const IDENTITY = new THREE.Quaternion();
+const rootRotation = new THREE.Quaternion();
+const boneAxis = new THREE.Vector3();
+
+interface PoseLink {
+  bone: THREE.Object3D;
+  start: THREE.Quaternion;
+  solved: THREE.Quaternion;
+}
+
+export interface PoseArm {
+  links: PoseLink[];
+  upper: THREE.Object3D;
+  lower: THREE.Object3D;
+  hand: THREE.Object3D;
+  /** Proximal to distal, one finger after another. */
+  fingers: THREE.Object3D[];
+  thumb: THREE.Object3D[];
+}
+
+/** Finds one arm's bones. Returns null if the model doesn't have them. */
+export function createPoseArm(scene: THREE.Object3D, side: 'Left' | 'Right'): PoseArm | null {
+  const links: PoseLink[] = [];
+  for (const part of ['UpperArm', 'LowerArm', 'Hand']) {
+    const bone = scene.getObjectByName(`${side}${part}`);
+    if (!bone) return null;
+    links.push({ bone, start: new THREE.Quaternion(), solved: new THREE.Quaternion() });
+  }
+  const joints = (finger: string) =>
+    JOINTS.map((joint) => scene.getObjectByName(`${side}${finger}${joint}`)).filter(
+      (bone): bone is THREE.Object3D => Boolean(bone),
+    );
+  return {
+    links,
+    upper: links[0].bone,
+    lower: links[1].bone,
+    hand: links[2].bone,
+    fingers: FINGERS.flatMap(joints),
+    thumb: joints('Thumb'),
+  };
+}
+
+export const poseArmBones = (arm: PoseArm | null) =>
+  arm ? [...arm.links.map((link) => link.bone), ...arm.fingers, ...arm.thumb] : [];
+
+const mirrorVector = ([x, y, z]: Vec3): Vec3 => [-x, y, z];
+
+/** The same pose on the other arm. */
+export const mirrorGoal = (goal: ArmGoal): ArmGoal => ({
+  ...goal,
+  wrist: mirrorVector(goal.wrist),
+  elbow: mirrorVector(goal.elbow),
+  fingers: mirrorVector(goal.fingers),
+  back: mirrorVector(goal.back),
+  thumb: goal.thumb ? mirrorVector(goal.thumb) : undefined,
+});
+
+/**
+ * Moves an arm to a goal pose. `weight` blends from the animated arm (0) to the
+ * goal (1). On both hands +Y runs along the fingers and +Z out of the back.
+ */
+export function applyArmGoal(arm: PoseArm, root: THREE.Object3D, goal: ArmGoal, weight: number) {
+  const { links, upper, lower, hand, fingers, thumb } = arm;
+  for (const link of links) link.start.copy(link.bone.quaternion);
+  upper.updateWorldMatrix(true, true);
+
+  root.getWorldQuaternion(rootRotation);
+  target.fromArray(goal.wrist);
+  root.localToWorld(target);
+
+  // Two-bone solve, with the elbow bending toward the goal's direction.
+  upper.getWorldPosition(shoulderAt);
+  lower.getWorldPosition(elbowAt);
+  hand.getWorldPosition(wristAt);
+  const upperLength = shoulderAt.distanceTo(elbowAt);
+  const lowerLength = elbowAt.distanceTo(wristAt);
+
+  reach.subVectors(target, shoulderAt);
+  const distance = THREE.MathUtils.clamp(
+    reach.length(),
+    Math.abs(upperLength - lowerLength) + 0.001,
+    upperLength + lowerLength - 0.001,
+  );
+  reach.normalize();
+  pole.fromArray(goal.elbow).applyQuaternion(rootRotation);
+  pole.addScaledVector(reach, -pole.dot(reach)).normalize();
+  const along = (upperLength ** 2 - lowerLength ** 2 + distance ** 2) / (2 * distance);
+  const out = Math.sqrt(Math.max(upperLength ** 2 - along ** 2, 0));
+  elbowGoal.copy(shoulderAt).addScaledVector(reach, along).addScaledVector(pole, out);
+
+  from.subVectors(elbowAt, shoulderAt).normalize();
+  to.subVectors(elbowGoal, shoulderAt).normalize();
+  aim(upper, from, to);
+
+  lower.getWorldPosition(elbowAt);
+  hand.getWorldPosition(wristAt);
+  from.subVectors(wristAt, elbowAt).normalize();
+  to.copy(shoulderAt).addScaledVector(reach, distance).sub(elbowAt).normalize();
+  aim(lower, from, to);
+
+  axisY.fromArray(goal.fingers).applyQuaternion(rootRotation).normalize();
+  axisZ.fromArray(goal.back).applyQuaternion(rootRotation);
+  axisX.crossVectors(axisY, axisZ).normalize();
+  axisZ.crossVectors(axisX, axisY).normalize();
+  worldRotation.setFromRotationMatrix(basis.makeBasis(axisX, axisY, axisZ));
+  hand.parent?.getWorldQuaternion(parentRotation).invert();
+  hand.quaternion.copy(parentRotation).multiply(worldRotation);
+
+  for (const link of links) {
+    link.solved.copy(link.bone.quaternion);
+    link.bone.quaternion.copy(link.start).slerp(link.solved, weight);
+  }
+  upper.updateWorldMatrix(false, true);
+
+  // Curl each joint toward the palm.
+  hand.getWorldQuaternion(worldRotation);
+  axisX.set(1, 0, 0).applyQuaternion(worldRotation);
+  turn.setFromAxisAngle(axisX, -weight * goal.curl);
+  for (const finger of fingers) {
+    if (!finger.parent) continue;
+    finger.parent.getWorldQuaternion(parentRotation);
+    worldRotation.copy(parentRotation).invert().multiply(turn).multiply(parentRotation);
+    finger.quaternion.premultiply(worldRotation);
+    finger.updateWorldMatrix(false, true);
+  }
+
+  if (!goal.thumb) return;
+  to.fromArray(goal.thumb).applyQuaternion(rootRotation).normalize();
+  for (const joint of thumb) {
+    if (!joint.parent) continue;
+    joint.getWorldQuaternion(worldRotation);
+    boneAxis.set(0, 1, 0).applyQuaternion(worldRotation);
+    turn.setFromUnitVectors(boneAxis, to).slerp(IDENTITY, 1 - weight);
+    worldRotation.premultiply(turn);
+    joint.parent.getWorldQuaternion(parentRotation).invert();
+    joint.quaternion.copy(parentRotation).multiply(worldRotation);
+    joint.updateWorldMatrix(false, true);
+  }
+}
 
 /** Turns a bone in world space so that its `from` direction becomes `to`. */
 function aim(bone: THREE.Object3D, fromDirection: THREE.Vector3, toDirection: THREE.Vector3) {

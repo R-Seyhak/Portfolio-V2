@@ -2,7 +2,8 @@
 
 /**
  * Animated portfolio character. Runs its own AnimationMixer and applies, in
- * this order every frame: mixer update, held expressions, head and eye look.
+ * this order every frame: mixer update, held expressions, posture, head and
+ * eye look, then the procedural arms.
  */
 import * as THREE from 'three';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
@@ -10,11 +11,34 @@ import type { ThreeElements } from '@react-three/fiber';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { loaderDone, loaderProgress, takeModelDownload } from '../loader/loaderClient';
-import { ANIMATION, BLINK, HEAD_ANCHOR, MODEL_URL, POINTER, WAVE } from './avatar.config';
-import { applyScratchArm, createScratchArm, scratchArmBones } from './avatarArm';
+import {
+  ANIMATION,
+  ARM_GOALS,
+  BLINK,
+  GESTURE_HEAD,
+  HEAD_ANCHOR,
+  HOVER,
+  MODEL_URL,
+  POINTER,
+  READY,
+  REACTIONS,
+  WAVE,
+} from './avatar.config';
+import {
+  applyArmGoal,
+  applyScratchArm,
+  createPoseArm,
+  createScratchArm,
+  mirrorGoal,
+  poseArmBones,
+  scratchArmBones,
+} from './avatarArm';
 import { createCalmWave } from './avatarClips';
 import { advanceGesture, createGestureState, releaseGesture, startGesture } from './avatarGestures';
+import { createGlassesArms } from './avatarGlasses';
+import { whenGpuIdle } from './avatarReady';
 import type {
+  DragTargetRef,
   GestureName,
   HeadAnchor,
   LookTargetRef,
@@ -30,16 +54,19 @@ export interface RithAvatarProps extends Omit<GroupProps, 'ref'> {
   /** False while off-screen, so no blink timers run. */
   active?: boolean;
   lookTarget?: LookTargetRef;
+  /** While the visitor is turning the avatar, the head stops following the cursor. */
+  drag?: DragTargetRef;
   /** Simplifies procedural gestures for visitors who prefer less motion. */
   reducedMotion?: boolean;
   fade?: number;
-  /** Called once the first posed frame has been drawn. */
+  /** Called once the GPU has finished the first posed frame. */
   onReady?: () => void;
 }
 
 const ONE_SHOTS: OneShotClip[] = ['GreetingWave', 'HeadTilt', 'HappyReaction'];
 const MORPH_NAMES: MorphName[] = ['smile', 'mouthOpen', 'browRaise', 'blinkLeft', 'blinkRight', 'blinkBoth'];
 const MAX_FRAME_DELTA = 1 / 15;
+const SHRUG_RIGHT = mirrorGoal(ARM_GOALS.shrug);
 
 // Draco is off because this model uses meshopt, so no decoder is fetched from a CDN.
 const USE_DRACO = false;
@@ -50,6 +77,7 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     autoBlink = true,
     active = true,
     lookTarget,
+    drag,
     reducedMotion = false,
     fade = ANIMATION.crossfade,
     onReady,
@@ -91,25 +119,37 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
       share,
       base: bone ? bone.quaternion.clone() : new THREE.Quaternion(),
     });
-    return [
+    const body = [
+      entry(get('Chest'), POINTER.chest),
+      entry(get('UpperChest'), POINTER.upperChest),
       entry(get('Neck'), POINTER.neck),
       entry(get('Head'), POINTER.head),
-      entry(get('LeftEye'), POINTER.eyes),
-      entry(get('RightEye'), POINTER.eyes),
     ];
+    const eyes = [entry(get('LeftEye'), 1), entry(get('RightEye'), 1)];
+    return { body, eyes, all: [...body, ...eyes] };
   }, [scene]);
 
-  // Procedural layer: extra bones it writes to, and the arm solver.
+  // Procedural layer: extra bones it writes to, and the arm solvers.
   const gestureRig = useMemo(() => {
     const arm = createScratchArm(scene, animations);
-    const chest = scene.getObjectByName('UpperChest') ?? null;
-    const extra = [chest, ...scratchArmBones(arm)].filter(
-      (bone): bone is THREE.Object3D => bone !== null,
-    );
+    const left = createPoseArm(scene, 'Left');
+    const right = createPoseArm(scene, 'Right');
+    const leftShoulder = scene.getObjectByName('LeftShoulder') ?? null;
+    const rightShoulder = scene.getObjectByName('RightShoulder') ?? null;
+    const extra = new Set<THREE.Object3D>([
+      ...scratchArmBones(arm),
+      ...poseArmBones(left),
+      ...poseArmBones(right),
+    ]);
+    if (leftShoulder) extra.add(leftShoulder);
+    if (rightShoulder) extra.add(rightShoulder);
     return {
       arm,
-      chest,
-      posed: extra.map((bone) => ({ bone, base: bone.quaternion.clone() })),
+      left,
+      right,
+      leftShoulder,
+      rightShoulder,
+      posed: [...extra].map((bone) => ({ bone, base: bone.quaternion.clone() })),
     };
   }, [scene, animations]);
   const gesture = useMemo(createGestureState, []);
@@ -127,20 +167,23 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
   // ---- clip control -------------------------------------------------------
   const current = useRef<THREE.AnimationAction | null>(null);
   const settledAt = useRef(0);
+  const clipDone = useRef<(() => void) | null>(null);
 
   const play = useCallback(
-    (name: OneShotClip) => {
+    (name: OneShotClip, onDone?: () => void) => {
       const idle = actions.Idle;
       const next = actions[name];
-      if (!idle || !next || gesture.name) return;
+      if (!idle || !next || gesture.name) return false;
       const from = current.current ?? idle;
       // A one-shot is playing, or still blending back to Idle: let it finish.
-      if (from !== idle || mixer.time < settledAt.current) return;
+      if (from !== idle || mixer.time < settledAt.current) return false;
       next.stopFading().reset().setLoop(THREE.LoopOnce, 1);
       next.clampWhenFinished = true;
       next.setEffectiveWeight(1).play();
       from.crossFadeTo(next, fade, false);
       current.current = next;
+      clipDone.current = onDone ?? null;
+      return true;
     },
     [actions, fade, mixer, gesture],
   );
@@ -191,10 +234,15 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     expressionTargets.current[name] = THREE.MathUtils.clamp(value, 0, 1);
   }, []);
 
+  const hoverTarget = useRef(0);
+  const setHover = useCallback((hovering: boolean) => {
+    hoverTarget.current = hovering ? 1 : 0;
+  }, []);
+
   useImperativeHandle(
     ref,
-    () => ({ play, blink, setMorph, perform, release, headAnchor }),
-    [play, blink, setMorph, perform, release, headAnchor],
+    () => ({ play, blink, setMorph, setHover, perform, release, headAnchor }),
+    [play, blink, setMorph, setHover, perform, release, headAnchor],
   );
 
   useEffect(() => {
@@ -216,6 +264,9 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
       event.action.crossFadeTo(idle, fade, false);
       current.current = idle;
       settledAt.current = mixer.time + fade;
+      const done = clipDone.current;
+      clipDone.current = null;
+      done?.();
     };
     mixer.addEventListener('finished', onFinished as never);
     return () => mixer.removeEventListener('finished', onFinished as never);
@@ -246,8 +297,57 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     };
   }, [autoBlink, active, blink, gesture]);
 
+  // Added before the ready gate below, so their shader is compiled with the rest.
+  useEffect(() => {
+    const head = scene.getObjectByName('Head');
+    if (!head) return;
+    const arms = createGlassesArms();
+    head.add(arms);
+    return () => {
+      head.remove(arms);
+      arms.geometry.dispose();
+      (arms.material as THREE.Material).dispose();
+    };
+  }, [scene]);
+
+  // ---- ready gate ---------------------------------------------------------
+  // Shaders and textures are prepared first, then the first posed frame is drawn,
+  // and only when the GPU has finished it does the avatar count as visible.
+  const readyPhase = useRef<'preparing' | 'drawing' | 'waiting'>('preparing');
+  const framesDrawn = useRef(0);
+  const cancelGpuWait = useRef<(() => void) | null>(null);
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
+  useEffect(() => {
+    let alive = true;
+    const { gl, scene: world, camera } = getThree();
+    let timeout = 0;
+    const limit = new Promise<void>((resolve) => {
+      timeout = window.setTimeout(resolve, READY.compileTimeoutMs);
+    });
+    Promise.race([gl.compileAsync(world, camera).catch(() => undefined), limit]).then(() => {
+      window.clearTimeout(timeout);
+      if (!alive) return;
+      scene.traverse((object) => {
+        const material = (object as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+        if (!material) return;
+        for (const texture of [material.map, material.normalMap, material.roughnessMap]) {
+          if (texture) gl.initTexture(texture);
+        }
+      });
+      readyPhase.current = 'drawing';
+    });
+    return () => {
+      alive = false;
+      window.clearTimeout(timeout);
+      cancelGpuWait.current?.();
+      cancelGpuWait.current = null;
+    };
+  }, [getThree, scene]);
+
   // ---- per-frame update ---------------------------------------------------
-  const look = useRef({ x: 0, y: 0 });
+  const look = useRef({ x: 0, y: 0, eyeX: 0, eyeY: 0, hover: 0 });
   const added = useMemo(() => new Map<THREE.Mesh, number[]>(), []);
   const scratch = useMemo(
     () => ({
@@ -258,11 +358,8 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     }),
     [],
   );
-  const framesDrawn = useRef(0);
-  const onReadyRef = useRef(onReady);
-  onReadyRef.current = onReady;
 
-  useFrame((_, rawDelta) => {
+  useFrame((state, rawDelta) => {
     const delta = Math.min(rawDelta, MAX_FRAME_DELTA);
 
     // Take last frame's offsets back out. The mixer only writes a value when it
@@ -275,7 +372,7 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
         for (let i = 0; i < influences.length; i++) influences[i] -= offsets[i];
       }
     }
-    for (const { bone, base } of lookBones) bone?.quaternion.copy(base);
+    for (const { bone, base } of lookBones.all) bone?.quaternion.copy(base);
     for (const { bone, base } of gestureRig.posed) bone.quaternion.copy(base);
 
     // 1) Animation
@@ -283,7 +380,7 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     const pose = gesture.pose;
     if (actions.Idle) actions.Idle.timeScale = pose.idleSpeed;
     mixer.update(delta);
-    for (const { bone, base } of lookBones) if (bone) base.copy(bone.quaternion);
+    for (const { bone, base } of lookBones.all) if (bone) base.copy(bone.quaternion);
     for (const { bone, base } of gestureRig.posed) base.copy(bone.quaternion);
 
     // 2) Held expressions, added on top of the clip
@@ -312,9 +409,11 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
             ? pose.browRaise
             : key === 'mouthOpen'
               ? pose.mouthOpen
-              : key === 'blinkBoth'
-                ? pose.lids
-                : 0;
+              : key === 'smile'
+                ? pose.smile
+                : key === 'blinkBoth'
+                  ? pose.lids
+                  : 0;
         const value = (held[key] ?? 0) * heldShare + gestureValue;
         if (!value) continue;
         const next = Math.min(1, influences[index] + value);
@@ -334,35 +433,70 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
       rotation.setFromEuler(euler).premultiply(parentInverse).multiply(parent);
       bone.quaternion.premultiply(rotation);
     };
-    const [neckBone, headBone, eyeLeft, eyeRight] = lookBones;
-    turnBone(gestureRig.chest, pose.chestPitch, 0, pose.chestRoll);
-    turnBone(neckBone.bone, pose.headPitch * POINTER.neck, pose.headYaw * POINTER.neck, pose.headRoll * POINTER.neck);
-    turnBone(headBone.bone, pose.headPitch * POINTER.head, pose.headYaw * POINTER.head, pose.headRoll * POINTER.head);
+    const [, upperChest, neckBone, headBone] = lookBones.body;
+    const [eyeLeft, eyeRight] = lookBones.eyes;
+    const lift = pose.shoulderLift * REACTIONS.shoulderLift;
+    turnBone(upperChest.bone, pose.chestPitch, 0, pose.chestRoll);
+    turnBone(gestureRig.leftShoulder, 0, 0, lift);
+    turnBone(gestureRig.rightShoulder, 0, 0, -lift);
+    turnBone(neckBone.bone, pose.headPitch * GESTURE_HEAD.neck, pose.headYaw * GESTURE_HEAD.neck, pose.headRoll * GESTURE_HEAD.neck);
+    turnBone(headBone.bone, pose.headPitch * GESTURE_HEAD.head, pose.headYaw * GESTURE_HEAD.head, pose.headRoll * GESTURE_HEAD.head);
     turnBone(eyeLeft.bone, pose.eyePitch, pose.eyeYaw, 0);
     turnBone(eyeRight.bone, pose.eyePitch, pose.eyeYaw, 0);
 
     const target = lookTarget?.current;
+    const following = Boolean(target?.active) && !drag?.current.active;
     const lookShare = 1 - pose.lookMute;
-    const targetX = target?.active ? target.x * lookShare : 0;
-    const targetY = target?.active ? target.y * lookShare : 0;
+    const targetX = following && target ? target.x * lookShare : 0;
+    const targetY = following && target ? target.y * lookShare : 0;
     const eased = look.current;
-    eased.x = THREE.MathUtils.damp(eased.x, targetX, POINTER.smoothing, delta);
-    eased.y = THREE.MathUtils.damp(eased.y, targetY, POINTER.smoothing, delta);
+    eased.x = THREE.MathUtils.damp(eased.x, targetX, POINTER.headSpeed, delta);
+    eased.y = THREE.MathUtils.damp(eased.y, targetY, POINTER.headSpeed, delta);
+    eased.eyeX = THREE.MathUtils.damp(eased.eyeX, targetX, POINTER.eyeSpeed, delta);
+    eased.eyeY = THREE.MathUtils.damp(eased.eyeY, targetY, POINTER.eyeSpeed, delta);
     const yaw = THREE.MathUtils.clamp(eased.x, -1, 1) * POINTER.maxYaw;
-    const pitch = THREE.MathUtils.clamp(-eased.y, -1, 1) * POINTER.maxPitch;
+    const headY = THREE.MathUtils.clamp(eased.y, -1, 1);
+    const pitch = -headY * (headY > 0 ? POINTER.maxPitchUp : POINTER.maxPitchDown);
 
     if (Math.abs(yaw) > 1e-4 || Math.abs(pitch) > 1e-4) {
-      for (const { bone, share } of lookBones) turnBone(bone, pitch * share, yaw * share, 0);
+      for (const { bone, share } of lookBones.body) turnBone(bone, pitch * share, yaw * share, 0);
     }
 
-    // 4) The arm goes last so the hand stays on the head wherever the head ended up
+    const hoverGoal = reducedMotion ? 0 : hoverTarget.current * lookShare;
+    eased.hover = THREE.MathUtils.damp(eased.hover, hoverGoal, HOVER.speed, delta);
+    if (eased.hover > 1e-3) turnBone(headBone.bone, 0, 0, eased.hover * HOVER.tilt);
+
+    const eyeYaw = THREE.MathUtils.clamp(eased.eyeX, -1, 1) * POINTER.eyeYaw;
+    const eyePitch = -THREE.MathUtils.clamp(eased.eyeY, -1, 1) * POINTER.eyePitch;
+    if (Math.abs(eyeYaw) > 1e-4 || Math.abs(eyePitch) > 1e-4) {
+      turnBone(eyeLeft.bone, eyePitch, eyeYaw, 0);
+      turnBone(eyeRight.bone, eyePitch, eyeYaw, 0);
+    }
+
+    // 4) The arms go last so a hand stays put wherever the body ended up
     if (gestureRig.arm && headBone.bone && pose.arm > 0.001) {
       applyScratchArm(gestureRig.arm, headBone.bone, pose.arm, pose.rub);
     }
+    if (gestureRig.right && pose.thumbsArm > 0.001) {
+      applyArmGoal(gestureRig.right, scene, ARM_GOALS.thumbsUp, pose.thumbsArm);
+    }
+    if (pose.shrugArms > 0.001) {
+      if (gestureRig.left) applyArmGoal(gestureRig.left, scene, ARM_GOALS.shrug, pose.shrugArms);
+      if (gestureRig.right) applyArmGoal(gestureRig.right, scene, SHRUG_RIGHT, pose.shrugArms);
+    }
+    if (gestureRig.left && pose.watchArm > 0.001) {
+      applyArmGoal(gestureRig.left, scene, ARM_GOALS.checkWatch, pose.watchArm);
+    }
 
-    if (framesDrawn.current < 2) {
+    if (readyPhase.current === 'drawing') {
       framesDrawn.current += 1;
-      if (framesDrawn.current === 2) onReadyRef.current?.();
+      if (framesDrawn.current === 2) {
+        readyPhase.current = 'waiting';
+        cancelGpuWait.current = whenGpuIdle(state.gl.getContext() as WebGL2RenderingContext, () => {
+          cancelGpuWait.current = null;
+          onReadyRef.current?.();
+        });
+      }
     }
     finishedGesture?.();
   });

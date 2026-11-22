@@ -1,26 +1,27 @@
 'use client';
 
 import * as THREE from 'three';
-import { Suspense, memo, useEffect, useLayoutEffect, useState } from 'react';
-import type { Ref } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Suspense, memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { ReactNode, Ref } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import type { EventManager } from '@react-three/fiber';
 import { ContactShadows, Environment, Lightformer, PerformanceMonitor } from '@react-three/drei';
 import RithAvatar from './RithAvatar';
-import { CAMERA_FOV, FRAMING, LIGHTING, MOBILE_BELOW_PX } from './avatar.config';
-import type { LookTargetRef, RithAvatarHandle } from './avatar.types';
+import { CAMERA_FOV, DRAG, FRAMING, LIGHTING, MOBILE_BELOW_PX } from './avatar.config';
+import type { DragTargetRef, LookTargetRef, RithAvatarHandle } from './avatar.types';
 
 export interface AvatarCanvasProps {
   avatarRef: Ref<RithAvatarHandle>;
   /** False while off-screen or in a hidden tab: rendering stops completely. */
   active: boolean;
   lookTarget: LookTargetRef;
+  drag: DragTargetRef;
   reducedMotion: boolean;
   onReady: () => void;
   onContextLost: () => void;
 }
 
-const DPR_RANGE: [number, number] = [1, 1.75];
+const DPR_RANGE: [number, number] = [1, 1.5];
 
 // Hover, click and scroll are handled by the DOM, so no raycasts run against
 // the 78k-triangle skinned mesh and the canvas can never trap a touch or wheel.
@@ -55,11 +56,66 @@ function ContextGuard({ onLost }: { onLost: () => void }) {
   return null;
 }
 
+/**
+ * Turns the avatar while it's dragged and springs it back on release. The shadow
+ * sits in the outer group, so it turns with him but doesn't tilt.
+ */
+function Turntable({
+  drag,
+  reducedMotion,
+  shadow,
+  children,
+}: {
+  drag: DragTargetRef;
+  reducedMotion: boolean;
+  shadow: ReactNode;
+  children: ReactNode;
+}) {
+  const turn = useRef<THREE.Group>(null);
+  const tilt = useRef<THREE.Group>(null);
+  const motion = useRef({ yaw: 0, yawSpeed: 0, pitch: 0, pitchSpeed: 0 });
+
+  useFrame((_, rawDelta) => {
+    const delta = Math.min(rawDelta, 1 / 30);
+    const state = motion.current;
+    const input = drag.current;
+
+    if (input.active) {
+      state.yaw = THREE.MathUtils.damp(state.yaw, input.yaw, DRAG.followSpeed, delta);
+      state.pitch = THREE.MathUtils.damp(state.pitch, input.pitch, DRAG.followSpeed, delta);
+      state.yawSpeed = 0;
+      state.pitchSpeed = 0;
+    } else if (state.yaw || state.pitch || state.yawSpeed || state.pitchSpeed) {
+      const damping = reducedMotion ? DRAG.reducedDamping : DRAG.damping;
+      state.yawSpeed += (-DRAG.stiffness * state.yaw - damping * state.yawSpeed) * delta;
+      state.pitchSpeed += (-DRAG.stiffness * state.pitch - damping * state.pitchSpeed) * delta;
+      state.yaw += state.yawSpeed * delta;
+      state.pitch += state.pitchSpeed * delta;
+      const settled =
+        Math.abs(state.yaw) + Math.abs(state.pitch) < 5e-4 &&
+        Math.abs(state.yawSpeed) + Math.abs(state.pitchSpeed) < 5e-3;
+      if (settled) state.yaw = state.pitch = state.yawSpeed = state.pitchSpeed = 0;
+    }
+
+    input.currentYaw = state.yaw;
+    if (turn.current) turn.current.rotation.y = state.yaw;
+    if (tilt.current) tilt.current.rotation.x = state.pitch;
+  });
+
+  return (
+    <group ref={turn}>
+      <group ref={tilt}>{children}</group>
+      {shadow}
+    </group>
+  );
+}
+
 // Memoized so a change of interaction mode never re-renders the 3D scene.
 export default memo(function AvatarCanvas({
   avatarRef,
   active,
   lookTarget,
+  drag,
   reducedMotion,
   onReady,
   onContextLost,
@@ -70,6 +126,7 @@ export default memo(function AvatarCanvas({
   return (
     <Canvas
       className="av-canvas"
+      aria-hidden="true"
       dpr={dpr}
       frameloop={active ? 'always' : 'never'}
       events={noPointerEvents}
@@ -99,23 +156,33 @@ export default memo(function AvatarCanvas({
           <Lightformer form="rect" intensity={1.2} position={[-4, 1, 3]} scale={[4, 6, 1]} />
           <Lightformer form="rect" intensity={0.8} position={[4, 1, 2]} scale={[4, 6, 1]} />
         </Environment>
-        <RithAvatar
-          ref={avatarRef}
-          scale={scale}
-          active={active}
-          lookTarget={lookTarget}
+        <Turntable
+          drag={drag}
           reducedMotion={reducedMotion}
-          onReady={onReady}
-        />
-        <ContactShadows
-          position={[0, 0.001, 0]}
-          frames={1}
-          resolution={256}
-          opacity={LIGHTING.shadow.opacity}
-          blur={LIGHTING.shadow.blur}
-          scale={LIGHTING.shadow.scale}
-          far={LIGHTING.shadow.far}
-        />
+          shadow={
+            // Must sit below y = 0: drei blurs on a plane at the world origin, and
+            // from above that plane is behind the shadow camera and wipes the result.
+            <ContactShadows
+              position={[0, -0.002, 0]}
+              frames={1}
+              resolution={256}
+              opacity={LIGHTING.shadow.opacity}
+              blur={LIGHTING.shadow.blur}
+              scale={LIGHTING.shadow.scale}
+              far={LIGHTING.shadow.far}
+            />
+          }
+        >
+          <RithAvatar
+            ref={avatarRef}
+            scale={scale}
+            active={active}
+            lookTarget={lookTarget}
+            drag={drag}
+            reducedMotion={reducedMotion}
+            onReady={onReady}
+          />
+        </Turntable>
       </Suspense>
     </Canvas>
   );

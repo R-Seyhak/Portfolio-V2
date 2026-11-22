@@ -1606,12 +1606,15 @@ html[data-site-loading] :is(.av-canvas, .av-fallback) { transition: none; }
   padding: 0;
   border-radius: 44% / 18%;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
+  user-select: none;
   touch-action: pan-y pinch-zoom;
   -webkit-tap-highlight-color: transparent;
 }
+.av-stage[data-dragging] .av-hit { cursor: grabbing; }
 .av-hit:focus { outline: none; }
 .av-hit:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.av-stage[data-dragging] .av-hit:focus-visible { outline: none; }
 
 /* Avatar reactions: small marks around the head, never in the way of a click */
 .av-fx {
