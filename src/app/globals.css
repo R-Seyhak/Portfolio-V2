@@ -83,6 +83,7 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "ss01", "cv11";
     overflow-x: hidden;
+    position: relative;   /* the 3D layer spans the whole document */
     transition: background 0.4s ease, color 0.4s ease;
   }
   ::selection { background: var(--c-accent); color: white; }
@@ -1565,7 +1566,14 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   pointer-events: none;
   transition: opacity .55s ease;
 }
-/* The one shared 3D canvas, fixed behind the page. The Hero stays transparent so it shows through. */
+/* The one shared 3D canvas, behind the page. The Hero stays transparent so it shows through. */
+.scene-layer {
+  position: absolute; inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  overflow: clip;
+  pointer-events: none;
+}
 .scene-canvas { opacity: 0; transition: opacity .7s ease; }
 .scene-canvas[data-visible] { opacity: 1; }
 .av-view { position: absolute; inset: 0; pointer-events: none; }
@@ -2255,7 +2263,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   --kc-unit: 96px;
   position: relative;
   height: clamp(470px, 62svh, 560px);
-  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
 }
 .kc-view { position: absolute; inset: 0; pointer-events: none; }
 .kc-lines {
@@ -2336,7 +2344,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   pointer-events: none;
 }
 .kc-stage:not([data-live]) .kc-node[aria-pressed="true"] .kc-ring { opacity: 1; scale: 1; }
-.kc-node:focus-visible .kc-ring { opacity: 1; scale: 1; border-width: 2px; }
+.kc-node[data-keyboard] .kc-ring { opacity: 1; scale: 1; border-width: 2px; }
 
 .kc-name {
   position: absolute;
@@ -2479,14 +2487,34 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 @media (max-width: 860px) { .kc-list-body { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 719px) {
   .kc { margin-top: 8px; }
-  .kc-stage { height: min(146vw, 620px); }
+  /* Exactly as tall as the layout needs at this width, leaving room for the note. */
+  .kc-stage { height: min(calc((100vw - 36px) * 1.49), 620px); }
   .kc-group { font-size: 12px; }
   .kc-name, .kc-node[data-tier="secondary"] .kc-name { font-size: 11.5px; }
   .kc-node[data-tier="primary"] .kc-name { font-size: 12px; }
   .kc-node[data-tier="secondary"]:not([data-in], [data-related], [data-focus], [aria-pressed="true"]) .kc-name { opacity: 0; }
-  .kc-info { min-height: 188px; }
-  .kc-info-body { grid-template-columns: 1fr; }
+  /* Compact, so the note fits on screen together with the constellation. */
+  /* Tall enough for the longest note, so choosing a node never moves the page. */
+  .kc-info { min-height: 180px; margin-top: 2px; padding-top: 14px; }
+  .kc-info-body { grid-template-columns: 1fr; gap: 8px; }
+  .kc-info-head { gap: 11px; }
+  .kc-info-logo { width: 40px; height: 40px; }
+  .kc-info-name { font-size: 23px; }
+  .kc-info-text { font-size: 14px; line-height: 1.45; }
+  .kc-info-meta { margin-top: 3px; font-size: 13px; }
   .kc-list-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 389px) { .kc-info { min-height: 202px; } }
+/* Short phones: a tighter note, so it fits under the constellation. */
+@media (max-width: 719px) and (max-height: 700px) {
+  .kc-info { padding-top: 10px; }
+  .kc-info-body { gap: 6px; }
+  .kc-info-logo { width: 34px; height: 34px; }
+  .kc-info-name { font-size: 21px; }
+}
+/* Phones held sideways: the whole constellation fits under the top bar. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .kc-stage { height: max(290px, calc(100svh - 76px)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .kc-info-body { animation: none; }

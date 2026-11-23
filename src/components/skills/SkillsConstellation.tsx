@@ -70,7 +70,8 @@ export const SkillsConstellation = memo(function SkillsConstellation({
   const active = onScreen && pageVisible;
 
   useEffect(() => {
-    const query = window.matchMedia(`(max-width: ${PHONE_BELOW_PX - 1}px)`);
+    // A phone held sideways is wide and short, so it uses the wide layout.
+    const query = window.matchMedia(`(max-width: ${PHONE_BELOW_PX - 1}px) and (orientation: portrait)`);
     const sync = () => setPhone(query.matches);
     sync();
     query.addEventListener('change', sync);
@@ -222,6 +223,30 @@ export const SkillsConstellation = memo(function SkillsConstellation({
     [paintFocus],
   );
 
+  // The focus ring is for keyboard users only. The browser's own :focus-visible can
+  // stay on after a tap, so this tracks what the visitor is actually using.
+  const usingKeyboard = useRef(false);
+  useEffect(() => {
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Tab' || event.key === 'Home' || event.key === 'End' || event.key.startsWith('Arrow')) {
+        usingKeyboard.current = true;
+      }
+    };
+    const onPointer = () => {
+      usingKeyboard.current = false;
+      const index = buttons.current.findIndex((button) => button?.hasAttribute('data-keyboard'));
+      if (index < 0) return;
+      buttons.current[index]?.removeAttribute('data-keyboard');
+      if (input.current.hovered === index) hover(-1);
+    };
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener('pointerdown', onPointer, true);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('pointerdown', onPointer, true);
+    };
+  }, [hover]);
+
   // A different layout has different screen positions, so the selection starts over.
   useEffect(() => {
     input.current.hovered = -1;
@@ -244,6 +269,24 @@ export const SkillsConstellation = memo(function SkillsConstellation({
     }
     paintFocus();
   }, [mask, category, paintFocus]);
+
+  // On touch screens the note can start below the fold, so bring it up after a
+  // tap, without pushing the chosen node under the top bar.
+  useEffect(() => {
+    if (selected < 0 || !window.matchMedia('(pointer: coarse)').matches) return;
+    const id = requestAnimationFrame(() => {
+      const note = rootRef.current?.querySelector('.kc-info');
+      const button = buttons.current[selected];
+      if (!note || !button) return;
+      const bar = document.querySelector('.site-header')?.getBoundingClientRect().bottom ?? 60;
+      const needed = note.getBoundingClientRect().bottom + 12 - window.innerHeight;
+      // Leaves the node and its selection ring clear of the bar.
+      const room = button.getBoundingClientRect().top - bar - 46;
+      const by = Math.min(needed, room);
+      if (by > 6) window.scrollBy({ top: by, behavior: reducedMotion ? 'auto' : 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [selected, reducedMotion]);
 
   // Clicking anywhere outside the constellation returns it to its resting state.
   useEffect(() => {
@@ -479,9 +522,14 @@ export const SkillsConstellation = memo(function SkillsConstellation({
                 }}
                 onFocus={(event) => {
                   setCursor(index);
-                  if (event.currentTarget.matches(':focus-visible')) hover(index);
+                  if (!usingKeyboard.current) return;
+                  event.currentTarget.setAttribute('data-keyboard', '');
+                  hover(index);
                 }}
-                onBlur={() => hover(-1)}
+                onBlur={(event) => {
+                  event.currentTarget.removeAttribute('data-keyboard');
+                  hover(-1);
+                }}
                 onKeyDown={(event) => onKeyDown(event, index)}
                 onClick={() => select(selected === index ? -1 : index)}
               >

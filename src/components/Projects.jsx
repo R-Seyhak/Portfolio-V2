@@ -30,6 +30,7 @@ const ProjectShowcase = dynamic(loadShowcase, { ssr: false });
    --------------------------------------------------------------------------- */
 const SEG = 0.36;          // viewport-heights of scroll per project while pinned
 const ENTER_AT = 0.3;      // project 1 plays in once the scene's top passes 30% of the viewport
+const ENTER_AT_SMALL = 0.8; // on small screens, as soon as the stage starts to appear
 const HYST = 0.1;          // fraction of a stretch to overshoot before switching (no flicker at edges)
 const WHEEL_MIN = 24;      // px of wheel travel before a gesture counts as intent
 const GESTURE_GAP = 180;   // ms without wheel input that ends a gesture
@@ -67,7 +68,7 @@ function useProjectSteps(count, titles, reduced) {
       let next;
       if (top > 0) {
         // Scene still sliding in: show project 1 once it's well into view.
-        const line = vh * ENTER_AT;
+        const line = vh * (window.innerWidth < 768 ? ENTER_AT_SMALL : ENTER_AT);
         const margin = vh * 0.03;
         next = active < 0 ? (top < line - margin ? 0 : -1) : (top > line + margin ? -1 : 0);
       } else {

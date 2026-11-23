@@ -103,7 +103,7 @@ export function Skills({ activeTech }) {
           <div className="font-display italic text-[15px] text-ink-3">/ 03 · skills</div>
           <div>
             <h2 className="font-display font-medium text-ink tracking-[-0.025em] leading-none" style={{ fontSize: 'clamp(36px,5.5vw,64px)' }}>
-              {skills.length} tools I actually reach<br />for, on a good day.
+              {skills.length} tools I actually reach{' '}<br className="hidden sm:inline" />for, on a good day.
             </h2>
             <p className="mt-3.5 max-w-[560px] text-ink-2 text-[15px] leading-relaxed">
               Filter by category. Hover to highlight. Click a tech in Work to cross-filter here.
