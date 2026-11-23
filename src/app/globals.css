@@ -1522,7 +1522,7 @@
   to   { transform: none; }
 }
 html[data-site-loading] :is(.hero-intro, .hero-details, .av-visual) { animation-play-state: paused; }
-html[data-site-loading] :is(.av-canvas, .av-fallback) { transition: none; }
+html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 .hero-lede { margin-top: 8px; }
 .hero-stats { margin-top: 30px; }
 
@@ -1577,8 +1577,10 @@ html[data-site-loading] :is(.av-canvas, .av-fallback) { transition: none; }
   pointer-events: none;
   transition: opacity .55s ease;
 }
-.av-canvas { opacity: 0; transition: opacity .7s ease; }
-.av-stage[data-state="live"] .av-canvas { opacity: 1; }
+/* The one shared 3D canvas, fixed behind the page. The Hero stays transparent so it shows through. */
+.scene-canvas { opacity: 0; transition: opacity .7s ease; }
+.scene-canvas[data-visible] { opacity: 1; }
+.av-view { position: absolute; inset: 0; pointer-events: none; }
 .av-stage[data-state="live"] .av-fallback { opacity: 0; }
 .av-loader {
   position: absolute; left: 50%; bottom: 3%;
@@ -1701,7 +1703,7 @@ html[data-site-loading] :is(.av-canvas, .av-fallback) { transition: none; }
   .hero-word--out { display: none; }
   .hero-btn, .hero-link, .hero-link svg { transition: none; }
   .hero-intro, .hero-details, .av-visual { animation: none; }
-  .av-canvas, .av-fallback { transition: none; }
+  .scene-canvas, .av-fallback { transition: none; }
   .av-loader::after { animation: none; }
   .av-thought { animation: none; }
   .av-q { animation: none; opacity: .85; }

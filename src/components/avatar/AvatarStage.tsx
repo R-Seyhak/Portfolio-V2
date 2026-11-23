@@ -18,8 +18,9 @@ import { useAvatarBehavior } from './useAvatarBehavior';
 import { useAvatarDrag } from './useAvatarDrag';
 import { useInView, usePageVisible } from './useInView';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
+import { onSceneFailure, requestSceneCanvas, showSceneCanvas } from '../three/sceneStore';
 
-const AvatarCanvas = dynamic(() => import('./AvatarCanvas'), { ssr: false });
+const AvatarScene = dynamic(() => import('./AvatarScene'), { ssr: false });
 
 type StageState = 'static' | 'loading' | 'live';
 
@@ -92,6 +93,7 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
   const showStatic = useCallback(() => setState('static'), []);
   const markReady = useCallback(() => {
     setState('live');
+    showSceneCanvas();
     loaderDone('code', 'model', 'scene');
   }, []);
 
@@ -125,6 +127,7 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
     }
     const start = () => {
       setState('loading');
+      requestSceneCanvas();
       setShouldMount(true);
     };
     if (waitsForAvatar.current) {
@@ -224,6 +227,9 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
     settleOnFallback();
   }, [showStatic, settleOnFallback]);
 
+  // If the shared canvas loses WebGL, the Hero returns to its static image.
+  useEffect(() => onSceneFailure(failed), [failed]);
+
   const smile = (value: number) => avatarRef.current?.setMorph('smile', value);
   const hoverOn = () => {
     smile(ANIMATION.hoverSmile);
@@ -241,14 +247,14 @@ export function AvatarStage({ trackRef }: { trackRef: RefObject<HTMLElement> }) 
         <AvatarFallback />
         {shouldMount && (
           <AvatarErrorBoundary onError={failed}>
-            <AvatarCanvas
+            <AvatarScene
               avatarRef={avatarRef}
               active={active || state === 'loading'}
               lookTarget={lookTarget}
               drag={drag}
               reducedMotion={reducedMotion}
               onReady={markReady}
-              onContextLost={failed}
+              onError={failed}
             />
           </AvatarErrorBoundary>
         )}

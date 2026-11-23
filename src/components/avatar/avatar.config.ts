@@ -19,16 +19,6 @@ export const FRAMING: { desktop: CameraFraming; mobile: CameraFraming } = {
   mobile: { position: [0, 0.9, 3.25], target: [0, 0.71, 0], minAspect: 0.7, scale: 1 },
 };
 
-export const LIGHTING = {
-  /** Overall brightness. Change this first. */
-  exposure: 1.5,
-  ambient: 0.62,
-  key: { position: [-2, 4, 3] as const, intensity: 1.35 },
-  rim: { position: [2.5, 2, -2] as const, intensity: 0.55 },
-  environment: 0.32,
-  shadow: { opacity: 0.26, blur: 2.6, scale: 2.4, far: 1.4 },
-} as const;
-
 export const ANIMATION = {
   /** Seconds to blend between body clips. */
   crossfade: 0.3,

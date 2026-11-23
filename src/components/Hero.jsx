@@ -65,7 +65,7 @@ export function Hero({ onOpenCmdK }) {
   ];
 
   return (
-    <section id="home" ref={heroRef} className="hero min-h-screen relative overflow-hidden bg-bg">
+    <section id="home" ref={heroRef} className="hero min-h-screen relative overflow-hidden">
       <div className="section-container hero-shell">
         <div className="hero-grid">
           <div className="hero-intro">

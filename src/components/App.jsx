@@ -11,6 +11,7 @@ import { Projects } from './Projects.jsx';
 import { Experience } from './Experience.jsx';
 import { Contact } from './Contact.jsx';
 import { Tweaks } from './Tweaks.jsx';
+import { SceneCanvasHost } from './three/SceneCanvasHost';
 
 const TWEAK_DEFAULTS = {
   accentHue: 250,
@@ -66,6 +67,7 @@ export function App() {
 
   return (
     <>
+      <SceneCanvasHost />
       {tweakState.cursorGlow && <div className="cursor-glow" />}
       <TopBar onOpenCmdK={() => setCmdOpen(true)} />
       <LeftRail />
