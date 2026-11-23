@@ -18,7 +18,7 @@ import { useAvatarBehavior } from './useAvatarBehavior';
 import { useAvatarDrag } from './useAvatarDrag';
 import { useInView, usePageVisible } from './useInView';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
-import { onSceneFailure, requestSceneCanvas, showSceneCanvas } from '../three/sceneStore';
+import { onSceneFailure, requestSceneCanvas, showSceneCanvas, supportsWebGL } from '../three/sceneStore';
 
 const AvatarScene = dynamic(() => import('./AvatarScene'), { ssr: false });
 
@@ -40,17 +40,6 @@ class AvatarErrorBoundary extends Component<
 
   render() {
     return this.state.failed ? null : this.props.children;
-  }
-}
-
-function supportsWebGL() {
-  try {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
-    context?.getExtension('WEBGL_lose_context')?.loseContext();
-    return Boolean(context);
-  } catch {
-    return false;
   }
 }
 

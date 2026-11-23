@@ -73,7 +73,7 @@ export function App() {
       <LeftRail />
       <Hero onOpenCmdK={() => setCmdOpen(true)} />
       <About />
-      <Skills activeTech={activeTech} onTechClick={() => {}} />
+      <Skills activeTech={activeTech} />
       <Projects
         onTechHover={(techs) => setActiveTech(techs)}
         onTechLeave={() => setActiveTech(null)}

@@ -11,7 +11,7 @@ import {
 import { FaJava } from 'react-icons/fa';
 import { PORTFOLIO } from '../data.js';
 import { useReveal, cn } from './primitives.jsx';
-import { useLiveWhileVisible } from './motion.js';
+import { SkillsConstellation } from './skills/SkillsConstellation';
 
 function LocalIcon({ src, alt }) {
   return <img src={src} alt={alt} width={44} height={44} style={{ objectFit: 'contain' }} />;
@@ -49,11 +49,10 @@ const SKILL_ICONS = {
   'Figma':        { icon: <SiFigma       size={44} color="#F24E1E" /> },
 };
 
-export function Skills({ activeTech, onTechClick }) {
+export function Skills({ activeTech }) {
   const { skills, categories } = PORTFOLIO;
   const [cat, setCat] = useState('all');
   const ref = useReveal();
-  const gridRef = useLiveWhileVisible();
   const filterRef = useRef(null);
   const pillRefs = useRef({});
   const [indicator, setIndicator] = useState(null);
@@ -65,13 +64,18 @@ export function Skills({ activeTech, onTechClick }) {
       if (!el || !container) return;
       const c = container.getBoundingClientRect();
       const e = el.getBoundingClientRect();
-      setIndicator({ x: e.left - c.left, y: e.top - c.top, w: e.width, h: e.height });
+      // The row scrolls sideways on phones, and the indicator scrolls with it.
+      setIndicator({ x: e.left - c.left + container.scrollLeft, y: e.top - c.top + container.scrollTop, w: e.width, h: e.height });
     }
     measure();
     const ro = new ResizeObserver(measure);
     if (filterRef.current) ro.observe(filterRef.current);
+    // The pills change width when the web font arrives.
+    Object.values(pillRefs.current).forEach((pill) => ro.observe(pill));
+    let alive = true;
+    document.fonts?.ready.then(() => { if (alive) measure(); });
     window.addEventListener('resize', measure);
-    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+    return () => { alive = false; ro.disconnect(); window.removeEventListener('resize', measure); };
   }, [cat]);
 
   const counts = useMemo(() => {
@@ -80,13 +84,20 @@ export function Skills({ activeTech, onTechClick }) {
     return c;
   }, []);
 
-  const filtered = useMemo(() => {
-    const list = cat === 'all' ? skills : skills.filter((s) => s.cat === cat);
-    return list.slice().sort((a, b) => b.level - a.level);
+  // On phones, keep the chosen pill in view inside its scrolling row.
+  useEffect(() => {
+    const el = pillRefs.current[cat];
+    const container = filterRef.current;
+    if (!el || !container || container.scrollWidth <= container.clientWidth) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    container.scrollTo({
+      left: el.offsetLeft - (container.clientWidth - el.offsetWidth) / 2,
+      behavior: reduced ? 'auto' : 'smooth',
+    });
   }, [cat]);
 
   return (
-    <section id="skills" className="py-[var(--section-y)] relative bg-bg-2">
+    <section id="skills" className="py-[var(--section-y)] relative scene-band scene-band--alt">
       <div className="section-container">
         <div className="section-header">
           <div className="font-display italic text-[15px] text-ink-3">/ 03 · skills</div>
@@ -101,7 +112,13 @@ export function Skills({ activeTech, onTechClick }) {
         </div>
 
         <div className="reveal" ref={ref}>
-          <div ref={filterRef} className="relative flex flex-wrap justify-center gap-2 mb-7" style={{ isolation: 'isolate' }}>
+          <div
+            ref={filterRef}
+            role="group"
+            aria-label="Filter technologies by category"
+            className="sk-filters relative flex flex-wrap justify-center gap-2"
+            style={{ isolation: 'isolate' }}
+          >
             <span
               aria-hidden
               className="absolute top-0 left-0 rounded-full pointer-events-none"
@@ -138,35 +155,9 @@ export function Skills({ activeTech, onTechClick }) {
             })}
           </div>
 
-          <div className="skills-icon-grid" ref={gridRef}>
-            {filtered.map((s, i) => {
-              const meta = SKILL_ICONS[s.name];
-              if (!meta) return null;
-              const dim = activeTech && !activeTech.includes(s.name);
-              return (
-                <div
-                  key={s.name}
-                  className={cn(
-                    'skill-icon-tile flex flex-col items-center gap-2.5 py-5 px-2 pb-4 rounded-design cursor-default',
-                    dim && 'dim'
-                  )}
-                  // Only a handful of icons drift, each on its own slow rhythm.
-                  data-float={i % 6 === 2 ? '' : undefined}
-                  style={{ '--sk-turn': i % 2 ? 1 : -1, '--sk-dur': `${6.5 + (i % 4) * 0.8}s`, '--sk-delay': `${-i * 0.7}s` }}
-                  onClick={() => onTechClick && onTechClick(s.name)}
-                >
-                  <div className="sk-icon">
-                    <span className="sk-tip" aria-hidden="true">{s.name}</span>
-                    <div className="sk-float">
-                      <div className="sk-glyph">{meta.icon}</div>
-                    </div>
-                  </div>
-                  <span className="sk-name font-display italic text-[13.5px] text-ink-2 text-center leading-[1.3]">{s.name}</span>
-                </div>
-              );
-            })}
-          </div>
         </div>
+
+        <SkillsConstellation icons={SKILL_ICONS} category={cat} activeTech={activeTech} />
       </div>
     </section>
   );

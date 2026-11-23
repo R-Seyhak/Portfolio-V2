@@ -6,6 +6,7 @@ import { PORTFOLIO } from '../data.js';
 import { Icon } from './primitives.jsx';
 import { TechPill } from './TechPill.jsx';
 import { useReducedMotion, useTilt } from './motion.js';
+import { AvatarCompanion } from './companion/AvatarCompanion';
 
 // Loaded on first hover / focus of a thumbnail, so it costs nothing up front.
 const loadShowcase = () => import('./ProjectShowcase.jsx');
@@ -400,9 +401,9 @@ export function Projects({ onTechHover, onTechLeave }) {
   }, [focusProject, refs, reduced]);
 
   return (
-    <section id="projects" className="pt-[var(--section-y)] relative bg-bg">
+    <section id="projects" className="pt-[var(--section-y)] relative scene-band">
       <div className="section-container" style={{ maxWidth: 1680 }}>
-        <div className="section-header" style={{ marginBottom: 0 }}>
+        <div className="section-header relative" style={{ marginBottom: 0 }}>
           <div className="font-display italic text-[15px] text-ink-3">/ 04 · work</div>
           <div>
             <h2 className="font-display font-medium text-ink tracking-[-0.025em] leading-none" style={{ fontSize: 'clamp(36px,5.5vw,64px)' }}>
@@ -412,6 +413,7 @@ export function Projects({ onTechHover, onTechLeave }) {
               A closer look at what I've built — hover a tech pill to highlight that skill above.
             </p>
           </div>
+          <AvatarCompanion />
         </div>
       </div>
 

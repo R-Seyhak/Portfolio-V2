@@ -139,18 +139,6 @@
   }
   @media (max-width: 720px) { .footer-grid { grid-template-columns: 1fr; gap: 24px; } }
 
-  /* Skills grid */
-  .skills-icon-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-  .skills-icon-grid > * { flex: 0 0 88px; }
-  @media (max-width: 480px) {
-    .skills-icon-grid > * { flex: 0 0 72px; }
-  }
-
   /* Timeline */
   .timeline { position: relative; padding-left: 40px; }
   .timeline-item {
@@ -2008,83 +1996,28 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 .section-header[data-rv][data-rv-in] { opacity: 1; translate: none; }
 
 /* =========================================================
-   SKILLS — icons with a little height off the page
+   SKILLS — category filters
    ========================================================= */
-.skill-icon-tile { position: relative; transition: opacity .3s ease; }
-.skill-icon-tile:hover { z-index: 2; }
-.sk-icon {
-  position: relative;
-  isolation: isolate;
-  display: flex; align-items: center; justify-content: center;
-  width: 52px; height: 52px;
-  perspective: 340px;
-}
-/* Soft contact shadow: it spreads and lightens as the icon rises */
-.sk-icon::after {
-  content: "";
-  position: absolute; z-index: -1;
-  left: 12%; right: 12%; bottom: -3px;
-  height: 8px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, oklch(30% 0.02 85 / .3), transparent);
-  opacity: .75;
-  transform: scale(.84);
-  transition: transform .42s var(--ease-soft), opacity .42s ease;
-}
-[data-theme="dark"] .sk-icon::after { background: radial-gradient(closest-side, oklch(0% 0 0 / .6), transparent); }
-.sk-float { display: flex; }
-.sk-glyph {
-  display: flex;
-  filter: drop-shadow(0 1px 1px oklch(0% 0 0 / .14));
-  transition: transform .42s var(--ease-soft), filter .42s ease;
-}
-.sk-name { transition: opacity .2s ease; }
-.sk-tip {
-  position: absolute; z-index: 3;
-  left: 50%; bottom: calc(100% + 5px);
-  padding: 5px 9px;
-  border-radius: 6px;
-  background: var(--c-ink);
-  color: var(--c-bg);
-  font: italic 400 13px/1.1 "Fraunces", "Inter", serif;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  translate: -50% 5px;
-  box-shadow: 0 8px 16px -8px oklch(0% 0 0 / .4);
-  transition: opacity .2s ease, translate .3s var(--ease-soft);
-}
-.sk-tip::after {
-  content: "";
-  position: absolute; left: 50%; top: 100%;
-  margin-left: -4px;
-  border: 4px solid transparent;
-  border-top-color: var(--c-ink);
-}
-@media (hover: hover) and (pointer: fine) {
-  .skill-icon-tile:hover .sk-glyph {
-    transform: translateY(-6px) scale(1.1) rotateX(8deg) rotateY(calc(var(--sk-turn, 1) * 10deg));
-    filter: drop-shadow(0 7px 5px oklch(0% 0 0 / .18));
-  }
-  .skill-icon-tile:hover .sk-icon::after { transform: scale(1.06); opacity: .5; }
-  .skill-icon-tile:hover .sk-tip { opacity: 1; translate: -50% 0; }
-  /* The name moves up into the tooltip rather than showing twice */
-  .skill-icon-tile:hover .sk-name { opacity: 0; }
-}
-.skill-icon-tile:active .sk-glyph { transform: scale(.94); transition-duration: .12s; }
-@media (hover: hover) and (pointer: fine) and (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
-  .skills-icon-grid[data-live] .skill-icon-tile[data-float] .sk-float {
-    animation: sk-float var(--sk-dur, 7s) ease-in-out var(--sk-delay, 0s) infinite;
-  }
-  .skill-icon-tile:hover .sk-float { animation-play-state: paused !important; }
-}
-@keyframes sk-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
 .sk-filter { transition: color .5s ease, border-color .5s ease, translate .25s var(--ease-soft); }
 @media (hover: hover) { .sk-filter[aria-pressed="false"]:hover { translate: 0 -1px; } }
 .sk-filter:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+/* Phones: one row that scrolls sideways, running to the screen edges. */
+@media (max-width: 719px) {
+  .sk-filters {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    margin-inline: -24px;
+    padding: 2px 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sk-filters::-webkit-scrollbar { display: none; }
+  .sk-filter { flex: 0 0 auto; }
+}
+@media (max-width: 520px) {
+  .sk-filters { margin-inline: -18px; padding-inline: 18px; }
+}
 
 /* =========================================================
    EXPERIENCE — the line draws itself as you read
@@ -2238,9 +2171,8 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .section-header[data-rv] { opacity: 1; translate: none; transition: none; }
-  .skill-icon-tile, .sk-glyph, .sk-icon::after, .sk-name, .sk-tip, .sk-filter,
+  .sk-filter,
   .tl-cert, .ct-input, .ct-submit, .ct-submit svg, .ct-copy, .ct-social, .site-resume { transition: none !important; }
-  .skill-icon-tile:hover .sk-glyph, .skill-icon-tile:active .sk-glyph { transform: none; }
   .tl-cert:hover, .ct-submit:hover:not(:disabled), .ct-submit:active:not(:disabled),
   .ct-copy:hover, .ct-social:hover, .site-resume:hover, .sk-filter:hover { translate: none !important; }
   .ct-submit:hover:not(:disabled) svg { transform: none; }
@@ -2256,9 +2188,314 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 }
 
 /* =========================================================
+   SHARED CANVAS LAYERING
+   A section's paper sits under the fixed 3D canvas and its content sits above
+   it, so 3D can appear in the section without ever covering the text.
+   ========================================================= */
+.scene-band { --sec-bg: var(--c-bg); background: transparent; }
+.scene-band--alt { --sec-bg: var(--c-bg-2); }
+.scene-band::before {
+  content: "";
+  position: absolute; inset: 0;
+  z-index: -2;
+  background: var(--sec-bg);
+  transition: background .4s ease;
+  pointer-events: none;
+}
+
+/* =========================================================
+   WORK AVATAR — beside the heading, clear of its rule
+   ========================================================= */
+.cp-spot { display: none; pointer-events: none; }
+.cp-view { position: absolute; inset: 0; pointer-events: none; }
+/* Paper-coloured cover over the canvas: fading it is how the figure appears. */
+.cp-veil {
+  position: absolute; inset: 0;
+  background: var(--sec-bg);
+  transition: opacity .32s ease, background .4s ease;
+}
+.cp-spot[data-on] .cp-veil { opacity: 0; }
+.cp-line {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 14%;
+  width: max-content;
+  max-width: 150px;
+  margin: 0;
+  font: italic 400 14px/1.3 "Fraunces", "Inter", serif;
+  color: var(--c-ink-2);
+  text-align: right;
+  opacity: 0;
+  translate: 0 4px;
+  transition: opacity .45s ease, translate .6s var(--ease-soft);
+}
+.cp-spot[data-speaking] .cp-line { opacity: 1; translate: none; }
+/* Shown only if AvatarCompanion measures clear space around the heading. */
+@media (min-width: 720px) {
+  .cp-spot {
+    --cp-h: clamp(156px, 15vw, 212px);
+    display: block;
+    position: absolute;
+    right: clamp(16px, 9%, 170px);
+    bottom: 38px;
+    width: calc(var(--cp-h) * .62);
+    height: var(--cp-h);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-veil, .cp-line { transition: none; }
+  .cp-line { translate: none; }
+}
+
+/* =========================================================
+   SKILLS CONSTELLATION
+   ========================================================= */
+.kc { margin-top: 12px; }
+.kc-stage {
+  --kc-unit: 96px;
+  position: relative;
+  height: clamp(470px, 62svh, 560px);
+  touch-action: pan-y;
+}
+.kc-view { position: absolute; inset: 0; pointer-events: none; }
+.kc-lines {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.kc-lines line {
+  stroke: var(--c-line-2);
+  stroke-width: 1;
+  transition: stroke .25s ease, opacity .25s ease;
+}
+.kc-lines line[data-hot] { stroke: var(--c-accent); }
+.kc-lines line[data-quiet] { opacity: .3; }
+.kc-stage[data-live] .kc-lines { display: none; }
+
+.kc-group {
+  position: absolute; left: 0; top: 0;
+  font: italic 400 13.5px/1 "Fraunces", "Inter", serif;
+  color: var(--c-ink-3);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: color .35s ease, opacity .35s ease;
+}
+.kc-stage[data-filtered] .kc-group { opacity: .4; }
+.kc-stage[data-filtered] .kc-group[data-active] { opacity: 1; color: var(--c-accent-ink); }
+.kc-stage:not([data-laid]) :is(.kc-node, .kc-group, .kc-lines) { visibility: hidden; }
+
+.kc-node {
+  --kc-size: .23;
+  --kc-r: calc(var(--kc-unit) * var(--kc-size));
+  position: absolute; left: 0; top: 0;
+  width: 0; height: 0;
+  padding: 0;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The hit area, at least 44px across, centred on the node. */
+.kc-node::before {
+  content: "";
+  position: absolute;
+  width: max(44px, calc(var(--kc-r) * 2.1));
+  height: max(44px, calc(var(--kc-r) * 2.1));
+  left: 0; top: 0;
+  translate: -50% -50%;
+  border-radius: 50%;
+}
+.kc-node:focus { outline: none; }
+.kc-node[data-focus] { z-index: 3; }
+/* Shown until the 3D is ready, and kept if WebGL isn't available. */
+.kc-glyph {
+  position: absolute; left: 0; top: 0;
+  display: grid; place-items: center;
+  width: calc(var(--kc-r) * 2); height: calc(var(--kc-r) * 2);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--c-bg);
+  border: 1px solid var(--c-line-2);
+  transition: opacity .4s ease, scale .3s var(--ease-soft);
+}
+.kc-glyph > * { width: 60% !important; height: 60% !important; }
+.kc-node[data-focus] .kc-glyph { scale: 1.16; }
+.kc-node[data-quiet] .kc-glyph { opacity: .4; }
+.kc-stage[data-live] .kc-glyph { opacity: 0; }
+
+/* Selection is shown by a ring and a label as well as by colour. In 3D the
+   selected ring is drawn on the node itself. This one marks keyboard focus. */
+.kc-ring {
+  position: absolute; left: 0; top: 0;
+  width: calc(var(--kc-r) * 2.9); height: calc(var(--kc-r) * 2.9);
+  translate: -50% -50%;
+  border: 1px solid var(--c-accent);
+  border-radius: 50%;
+  opacity: 0;
+  scale: .9;
+  transition: opacity .25s ease, scale .35s var(--ease-soft);
+  pointer-events: none;
+}
+.kc-stage:not([data-live]) .kc-node[aria-pressed="true"] .kc-ring { opacity: 1; scale: 1; }
+.kc-node:focus-visible .kc-ring { opacity: 1; scale: 1; border-width: 2px; }
+
+.kc-name {
+  position: absolute;
+  left: 0;
+  top: calc(var(--kc-r) * 1.08 + 4px);
+  translate: -50% 0;
+  font: italic 400 12px/1.15 "Fraunces", "Inter", serif;
+  color: var(--c-ink-3);
+  white-space: nowrap;
+  /* A sliver of paper behind the name, so a line passing under it never hurts legibility. */
+  padding: 0 4px;
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--sec-bg) 84%, transparent);
+  opacity: .85;
+  transition: opacity .25s ease, color .25s ease, translate .3s var(--ease-soft);
+  pointer-events: none;
+}
+.kc-node[data-tier="primary"] .kc-name { font-size: 13.5px; color: var(--c-ink); opacity: .95; }
+.kc-node[data-tier="secondary"] .kc-name { font-size: 13px; color: var(--c-ink-2); opacity: .95; }
+.kc-node[data-in] .kc-name { opacity: 1; color: var(--c-ink-2); }
+.kc-node[data-related] .kc-name { opacity: 1; color: var(--c-ink); }
+.kc-node[data-quiet] .kc-name { opacity: .16; }
+.kc-node[data-focus] .kc-name,
+.kc-node[aria-pressed="true"] .kc-name {
+  opacity: 1;
+  color: var(--c-ink);
+  translate: -50% calc(var(--kc-r) * .26);
+  z-index: 1;
+}
+/* Clears the selection ring. */
+.kc-node[aria-pressed="true"] .kc-name { translate: -50% calc(var(--kc-r) * .52); }
+/* Small screens: a name sits above its node if there's no room below, and otherwise
+   waits until the node is tapped. */
+.kc-node[data-name-off] .kc-name { opacity: 0; }
+.kc-node[data-name-up] .kc-name { top: auto; bottom: calc(var(--kc-r) * 1.08 + 4px); }
+.kc-node[data-name-up][data-focus] .kc-name { translate: -50% calc(var(--kc-r) * -.26); }
+.kc-node[data-name-up][aria-pressed="true"] .kc-name { translate: -50% calc(var(--kc-r) * -.52); }
+/* Less room: the quieter names wait until they're relevant. */
+@media (max-width: 1023px) {
+  .kc-node[data-tier="supporting"]:not([data-in], [data-related], [data-focus], [aria-pressed="true"]) .kc-name { opacity: 0; }
+}
+
+/* The note under the constellation */
+.kc-info {
+  min-height: 118px;
+  margin-top: 6px;
+  padding-top: 20px;
+  border-top: 1px solid var(--c-line);
+}
+.kc-info-hint {
+  font: italic 400 15px/1.4 "Fraunces", "Inter", serif;
+  color: var(--c-ink-3);
+  text-align: center;
+  padding-top: 18px;
+}
+.kc-info-body {
+  display: grid;
+  grid-template-columns: minmax(210px, 3fr) 8fr;
+  gap: 12px 32px;
+  animation: kc-info-in .4s var(--ease-soft) both;
+}
+@keyframes kc-info-in {
+  from { opacity: 0; translate: 0 6px; }
+  to   { opacity: 1; translate: none; }
+}
+.kc-info-head { display: flex; align-items: center; gap: 14px; align-self: start; }
+.kc-info-logo {
+  flex: none;
+  display: grid; place-items: center;
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: var(--c-bg);
+  border: 1px solid var(--c-line-2);
+}
+.kc-info-logo > * { width: 58% !important; height: 58% !important; }
+.kc-info-group { font: italic 400 13.5px/1.2 "Fraunces", "Inter", serif; color: var(--c-ink-3); }
+.kc-info-name {
+  margin-top: 3px;
+  font: 500 clamp(25px, 2.5vw, 32px)/1.05 "Fraunces", "Inter", serif;
+  letter-spacing: -.02em;
+  color: var(--c-ink);
+}
+.kc-info-text { font-size: 15px; line-height: 1.55; color: var(--c-ink-2); }
+.kc-info-meta {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 2px 7px;
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--c-ink-2);
+}
+.kc-info-meta > span:first-child {
+  font: italic 400 13.5px/1.5 "Fraunces", "Inter", serif;
+  color: var(--c-ink-3);
+  margin-right: 4px;
+}
+.kc-info-item { display: inline-flex; gap: 7px; align-items: baseline; }
+.kc-info-item i { font-style: normal; color: var(--c-ink-3); }
+.kc-info-item button {
+  padding: 0;
+  border-bottom: 1px solid var(--c-line-2);
+  transition: color .2s ease, border-color .2s ease;
+}
+@media (hover: hover) { .kc-info-item button:hover { color: var(--c-accent-ink); border-color: currentColor; } }
+
+/* The plain-text way to browse everything */
+.kc-list { margin-top: 10px; text-align: center; }
+.kc-list summary {
+  display: inline-block;
+  padding: 6px 2px;
+  font: italic 400 13.5px/1.3 "Fraunces", "Inter", serif;
+  color: var(--c-ink-3);
+  border-bottom: 1px solid var(--c-line-2);
+  cursor: pointer;
+  list-style: none;
+  transition: color .2s ease;
+}
+.kc-list summary::-webkit-details-marker { display: none; }
+@media (hover: hover) { .kc-list summary:hover { color: var(--c-ink); } }
+.kc-list-body {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 22px 24px;
+  margin-top: 22px;
+  text-align: left;
+}
+.kc-list-title { font: italic 400 14px/1.3 "Fraunces", "Inter", serif; color: var(--c-ink-2); margin-bottom: 6px; }
+.kc-list-title span { color: var(--c-ink-3); }
+.kc-list ul { list-style: none; margin: 0; padding: 0; }
+.kc-list li button { padding: 3px 0; font-size: 13.5px; color: var(--c-ink-2); text-align: left; transition: color .2s ease; }
+@media (hover: hover) { .kc-list li button:hover { color: var(--c-accent-ink); } }
+:is(.kc-info-item button, .kc-list li button, .kc-list summary):focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Tablets: sized to the constellation's width, so it doesn't float in empty space. */
+@media (min-width: 720px) and (max-width: 1023px) { .kc-stage { height: clamp(410px, 56vw, 540px); } }
+@media (max-width: 860px) { .kc-list-body { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 719px) {
+  .kc { margin-top: 8px; }
+  .kc-stage { height: min(146vw, 620px); }
+  .kc-group { font-size: 12px; }
+  .kc-name, .kc-node[data-tier="secondary"] .kc-name { font-size: 11.5px; }
+  .kc-node[data-tier="primary"] .kc-name { font-size: 12px; }
+  .kc-node[data-tier="secondary"]:not([data-in], [data-related], [data-focus], [aria-pressed="true"]) .kc-name { opacity: 0; }
+  .kc-info { min-height: 188px; }
+  .kc-info-body { grid-template-columns: 1fr; }
+  .kc-list-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kc-info-body { animation: none; }
+  .kc-glyph, .kc-ring, .kc-name, .kc-group, .kc-lines line { transition: none; }
+}
+
+/* =========================================================
    MISC
    ========================================================= */
-.skill-icon-tile.dim { opacity: 0.18; }
 .submit-btn-sent { background: oklch(55% 0.15 150) !important; }
 
 /* =========================================================

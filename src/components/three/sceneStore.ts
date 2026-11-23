@@ -31,6 +31,18 @@ function update(patch: Partial<SceneCanvasState>) {
   listeners.forEach((listener) => listener());
 }
 
+/** A throwaway context, released at once, so the check holds no GPU resources. */
+export function supportsWebGL() {
+  try {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
+    return Boolean(context);
+  } catch {
+    return false;
+  }
+}
+
 export const requestSceneCanvas = () => update({ requested: true });
 export const showSceneCanvas = () => update({ visible: true });
 

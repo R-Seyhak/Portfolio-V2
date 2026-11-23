@@ -188,6 +188,14 @@ export const ARM_GOALS = {
     back: [0.1, 0.95, 0.3],
     curl: 0.45,
   },
+  /** Companion: the right arm opening toward the page content, palm up. */
+  present: {
+    wrist: [-0.3, 0.77, 0.25],
+    elbow: [-0.3, -0.9, -0.3],
+    fingers: [-0.68, 0.2, 0.7],
+    back: [0.05, -1, 0.2],
+    curl: 0.05,
+  },
 } as const satisfies Record<string, ArmGoal>;
 
 /**

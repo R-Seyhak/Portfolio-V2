@@ -19,6 +19,7 @@ const POSE_KEYS = [
   'thumbsArm',
   'shrugArms',
   'watchArm',
+  'presentArm',
   'shoulderLift',
   'browRaise',
   'mouthOpen',
@@ -47,6 +48,7 @@ export const createRestPose = (): GesturePose => ({
   thumbsArm: 0,
   shrugArms: 0,
   watchArm: 0,
+  presentArm: 0,
   shoulderLift: 0,
   browRaise: 0,
   mouthOpen: 0,
@@ -274,6 +276,28 @@ const sampleCheckWatch: Sampler = (t, _reducedMotion, out) => {
   out.idleSpeed = at(WATCH.idleSpeed, t);
 };
 
+/** A sampler that reads each listed channel straight from its keys. */
+const keyed = (channels: Partial<Record<keyof GesturePose, Keys>>): Sampler => {
+  const entries = Object.entries(channels) as [keyof GesturePose, Keys][];
+  return (t, _reducedMotion, out) => {
+    for (const [name, keys] of entries) out[name] = at(keys, t);
+  };
+};
+
+// The Work section's pose. Negative yaw turns toward the page content.
+
+const sampleProud = keyed({
+  presentArm: [[0, 0], [1, 0], [1.6, 0.82], [3.1, 0.82], [3.9, 0]],
+  chestPitch: [[0, 0], [0.8, -0.07], [3.2, -0.06], [4.1, 0]],
+  shoulderLift: [[0, 0], [0.7, 0.3], [1.3, 0.12], [3.2, 0.1], [4, 0]],
+  headPitch: [[0, 0], [0.8, -0.09], [1.4, -0.05], [3.2, -0.05], [4, 0]],
+  headYaw: [[0, 0], [1, 0.05], [1.6, -0.28], [3.2, -0.26], [4, 0]],
+  eyeYaw: [[0, 0], [1.25, 0], [1.5, -0.2], [3.2, -0.18], [3.8, 0]],
+  smile: [[0, 0], [0.7, 0.72], [3.3, 0.72], [4.1, 0]],
+  lookMute: [[0, 0], [0.4, 1], [3.6, 1], [4.2, 0]],
+  idleSpeed: [[0, 1], [0.5, 0.6], [3.5, 0.6], [4.2, 1]],
+});
+
 interface GestureDefinition {
   duration: number;
   reducedDuration?: number;
@@ -291,6 +315,7 @@ const GESTURES: Record<GestureName, GestureDefinition> = {
   fallingAsleep: { duration: SLEEP.fallSec, reducedDuration: SLEEP.fallReducedSec, blendIn: 0.3, sample: sampleFallingAsleep },
   sleeping: { duration: Infinity, blendIn: 0.5, sample: sampleSleeping },
   wakingUp: { duration: SLEEP.wakeSec, blendIn: 0.13, reducedBlendIn: 0.35, sample: sampleWakingUp },
+  proud: { duration: 4.3, blendIn: 0.25, sample: sampleProud },
 };
 
 export interface GestureState {

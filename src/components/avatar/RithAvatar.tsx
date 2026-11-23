@@ -36,6 +36,7 @@ import {
 import { createCalmWave } from './avatarClips';
 import { advanceGesture, createGestureState, releaseGesture, startGesture } from './avatarGestures';
 import { createGlassesArms } from './avatarGlasses';
+import { cloneAvatarScene } from './avatarInstance';
 import { whenGpuIdle } from './avatarReady';
 import type {
   DragTargetRef,
@@ -61,6 +62,11 @@ export interface RithAvatarProps extends Omit<GroupProps, 'ref'> {
   fade?: number;
   /** Called once the GPU has finished the first posed frame. */
   onReady?: () => void;
+  /**
+   * Draws a second figure from the same download: its own skeleton and pose,
+   * sharing the geometry, materials and textures. The Hero leaves this off.
+   */
+  asClone?: boolean;
 }
 
 const ONE_SHOTS: OneShotClip[] = ['GreetingWave', 'HeadTilt', 'HappyReaction'];
@@ -81,11 +87,17 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     reducedMotion = false,
     fade = ANIMATION.crossfade,
     onReady,
+    asClone = false,
     ...props
   },
   ref,
 ) {
-  const { scene, animations } = useGLTF(MODEL_URL, USE_DRACO, USE_MESHOPT);
+  const gltf = useGLTF(MODEL_URL, USE_DRACO, USE_MESHOPT);
+  const { animations } = gltf;
+  const scene = useMemo(
+    () => (asClone ? cloneAvatarScene(gltf.scene, gltf.parser.json.nodes) : gltf.scene),
+    [asClone, gltf],
+  );
   const root = useRef<THREE.Group>(null);
   const getThree = useThree((state) => state.get);
 
@@ -360,6 +372,8 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
   );
 
   useFrame((state, rawDelta) => {
+    // Off-screen figures hold their pose, so only the visible one is animated.
+    if (!active) return;
     const delta = Math.min(rawDelta, MAX_FRAME_DELTA);
 
     // Take last frame's offsets back out. The mixer only writes a value when it
@@ -486,6 +500,9 @@ export const RithAvatar = forwardRef<RithAvatarHandle, RithAvatarProps>(function
     }
     if (gestureRig.left && pose.watchArm > 0.001) {
       applyArmGoal(gestureRig.left, scene, ARM_GOALS.checkWatch, pose.watchArm);
+    }
+    if (gestureRig.right && pose.presentArm > 0.001) {
+      applyArmGoal(gestureRig.right, scene, ARM_GOALS.present, pose.presentArm);
     }
 
     if (readyPhase.current === 'drawing') {

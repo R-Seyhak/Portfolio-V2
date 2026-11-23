@@ -24,7 +24,7 @@ export type AvatarMode =
   | 'wakingUp';
 
 /** A procedural performance layered over the body clips. The wave is a body clip. */
-export type GestureName = Exclude<AvatarMode, 'idle' | 'wave'>;
+export type GestureName = Exclude<AvatarMode, 'idle' | 'wave'> | 'proud';
 
 /** What a click can trigger, in the order the clicks cycle through them. */
 export type ReactionName = 'thumbsUp' | 'shrug' | 'brainLoading' | 'wave';
