@@ -4,7 +4,7 @@
 
 <h1 align="center">Rith Seyhak</h1>
 
-<p align="center"><em>Builds clean web apps, mobile apps and game worlds.</em></p>
+<p align="center"><em>My 3D twin naps more than I do.</em></p>
 
 <br>
 
