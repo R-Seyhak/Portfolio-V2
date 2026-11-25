@@ -894,24 +894,44 @@
   }
   .sc-close-icon { display: grid; place-items: center; }
 }
-.sc-btn:focus-visible, .sc-close:focus-visible, .sc-dot:focus-visible, .sc-next:focus-visible {
+.sc-btn:focus-visible, .sc-close:focus-visible, .sc-next:focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
 }
 
-/* Main image: a fixed stage, so nothing below jumps while an image loads */
+/* Main image: a fixed stage, so nothing below jumps while an image loads.
+   With a gallery, a thumbnail strip takes the bottom row of the same stage. */
 .sc-stage {
-  position: relative;
-  display: grid; place-items: center;
+  --sc-pad: clamp(16px, 3vw, 40px);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
   height: min(70vh, 780px);
   height: min(70svh, 780px);
-  padding: clamp(16px, 3vw, 40px);
+  padding: var(--sc-pad) 0;
   background: var(--c-bg-2);
   border-bottom: 1px solid var(--c-line);
   overflow: hidden;
+  /* Fast clicks on the arrows register as double/triple-clicks, which would
+     select (and tint blue) the image. Nothing here is meant to be selected. */
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
+.sc-stage--gallery {
+  grid-template-rows: minmax(0, 1fr) auto;
+  row-gap: clamp(10px, 1.4vw, 16px);
+  padding-bottom: clamp(10px, 1.4vw, 16px);
+}
+.sc-frame {
+  position: relative;
+  display: grid; place-items: center;
+  min-height: 0;
+  padding: 0 var(--sc-pad);
+}
+.sc-btn, .sc-close, .sc-next { user-select: none; }
 @media (max-width: 767px) {
-  .sc-stage { height: auto; aspect-ratio: 16 / 11; padding: 14px; }
+  .sc-stage { --sc-pad: 14px; height: auto; aspect-ratio: 16 / 11; }
+  /* Taller on phones so the strip doesn't shrink the image. */
+  .sc-stage--gallery { aspect-ratio: 5 / 4; }
 }
 .sc-shot {
   display: block;
@@ -926,22 +946,41 @@
 .sc-shot-nav { position: absolute; top: 50%; margin-top: -20px; box-shadow: 0 6px 14px -8px oklch(0% 0 0 / .4); }
 .sc-shot-nav--prev { left: clamp(8px, 1.6vw, 20px); }
 .sc-shot-nav--next { right: clamp(8px, 1.6vw, 20px); }
-.sc-dots {
-  position: absolute; left: 50%; bottom: 8px;
-  display: flex; gap: 2px;
-  transform: translateX(-50%);
+/* Thumbnail strip. Centred when it fits, scrolls sideways when it doesn't
+   (the auto margins centre it without cutting off the first thumbnail). */
+.sc-thumbs {
+  position: relative;
+  display: flex; gap: clamp(6px, .8vw, 10px);
+  padding: 5px var(--sc-pad);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-.sc-dot { position: relative; width: 24px; height: 24px; }
-.sc-dot::after {
-  content: "";
-  position: absolute; left: 4px; right: 4px; top: 11px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--c-line-2);
-  transition: background-color .25s ease;
+.sc-thumbs::-webkit-scrollbar { display: none; }
+.sc-thumb:first-child { margin-left: auto; }
+.sc-thumb:last-child { margin-right: auto; }
+.sc-thumb {
+  flex: none;
+  width: clamp(54px, 6vw, 84px);
+  aspect-ratio: 3 / 2;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--c-bg-3);
+  box-shadow: 0 0 0 1px var(--c-line);
+  opacity: .45;
+  transition: opacity .25s ease, box-shadow .25s ease, translate .25s var(--ease-soft);
 }
-.sc-dot:hover::after { background: var(--c-ink-3); }
-.sc-dot[aria-current]::after { background: var(--c-accent); }
+.sc-thumb img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.sc-thumb[aria-current] { opacity: 1; box-shadow: 0 0 0 2px var(--c-accent); }
+@media (hover: hover) {
+  .sc-thumb:not([aria-current]):hover { opacity: .8; translate: 0 -2px; }
+}
+.sc-thumb:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 3px; }
 
 /* Project information */
 .sc-body {
@@ -1055,8 +1094,8 @@
   .sc, .sc-sheet, .sc-shot, .sc-body,
   .sc[data-closing], .sc[data-closing] .sc-sheet { animation: none !important; }
   .sc-sheet { scroll-behavior: auto; }
-  .sc-btn, .sc-next, .sc-next-arrow, .sc-next-title { transition: none; }
-  .sc-btn:hover, .sc-next:hover .sc-next-arrow { translate: none; }
+  .sc-btn, .sc-next, .sc-next-arrow, .sc-next-title, .sc-thumb { transition: none; }
+  .sc-btn:hover, .sc-next:hover .sc-next-arrow, .sc-thumb:hover { translate: none; }
 }
 
 /* ---------- Reduced motion: no pinning, a plain list ---------- */

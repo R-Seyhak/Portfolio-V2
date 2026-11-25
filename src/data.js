@@ -82,8 +82,8 @@ export const PORTFOLIO = {
     //   implementation: ["…"]                        notable technical details
     //   challenges: ["…"]                            problems you solved
     //
-    // Cover images and project facts from chanraksa.com (team projects built
-    // at CamCyber Digital Tech Team). No public link, so no "See project".
+    // Cover images, gallery images and project facts from chanraksa.com (team
+    // projects built at CamCyber Digital Tech Team). No public link, so no "See project".
     {
       id: "mlmupc-hrm",
       title: "MLMUPC Human Resource Management System",
@@ -102,6 +102,14 @@ export const PORTFOLIO = {
       tech: ["Angular", "NestJS", "Flutter", "PostgreSQL", "Redis", "Socket.IO", "Docker"],
       image: "/photos/mlmupc-hrm.jpg",
       imageSize: [1600, 1000],
+      images: [
+        "/photos/mlmupc-hrm.jpg",
+        "/photos/mlmupc-hrm/1.jpg",
+        "/photos/mlmupc-hrm/2.jpg",
+        "/photos/mlmupc-hrm/3.jpg",
+        "/photos/mlmupc-hrm/4.jpg",
+        "/photos/mlmupc-hrm/5.jpg",
+      ],
       hue: 220,
       tag: "HR · Government",
     },
@@ -123,6 +131,14 @@ export const PORTFOLIO = {
       tech: ["Angular", "NestJS", "Flutter", "PostgreSQL", "Socket.IO", "Python", "Raspberry Pi"],
       image: "/photos/nis-hrm.jpg",
       imageSize: [1600, 1000],
+      images: [
+        "/photos/nis-hrm.jpg",
+        "/photos/nis-hrm/store-1.jpg",
+        "/photos/nis-hrm/store-2.jpg",
+        "/photos/nis-hrm/store-3.jpg",
+        "/photos/nis-hrm/2.jpg",
+        "/photos/nis-hrm/3.jpg",
+      ],
       hue: 265,
       tag: "HR · Government",
     },
@@ -143,6 +159,12 @@ export const PORTFOLIO = {
       tech: ["Flutter", "Angular", "NestJS", "PostgreSQL", "Redis", "Firebase", "Socket.IO"],
       image: "/photos/phumiyerng.jpg",
       imageSize: [1600, 1000],
+      images: [
+        "/photos/phumiyerng.jpg",
+        "/photos/phumiyerng/km-1.jpg",
+        "/photos/phumiyerng/km-2.jpg",
+        "/photos/phumiyerng/km-3.jpg",
+      ],
       hue: 145,
       tag: "Tourism · Marketplace",
     },

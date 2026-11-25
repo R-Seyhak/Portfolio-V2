@@ -37,6 +37,7 @@ export default function ProjectShowcase({ projects, startIndex, reduced, onClose
   const [view, setView] = useState({ index: startIndex, shot: 0, dir: 0, moved: false });
   const dlgRef = useRef(null);
   const sheetRef = useRef(null);
+  const thumbsRef = useRef(null);
   const pressedBackdrop = useRef(false);
   const closing = useRef(false);
   const indexRef = useRef(startIndex);
@@ -45,6 +46,7 @@ export default function ProjectShowcase({ projects, startIndex, reduced, onClose
   const n = projects.length;
   const project = projects[view.index];
   const shots = shotsOf(project);
+  const gallery = shots.length > 1;
   const prev = projects[(view.index - 1 + n) % n];
   const next = projects[(view.index + 1) % n];
   const roles = rolesOf(project);
@@ -117,7 +119,19 @@ export default function ProjectShowcase({ projects, startIndex, reduced, onClose
     });
   }, [view.index]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // A control that had focus can unmount on a project change (e.g. image dots).
+  // Keep the current thumbnail centred in the strip when it overflows (phones).
+  // scrollLeft only, so the sheet itself never scrolls.
+  useEffect(() => {
+    const strip = thumbsRef.current;
+    const thumb = strip?.children[view.shot];
+    if (!thumb || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollTo({
+      left: thumb.offsetLeft - (strip.clientWidth - thumb.offsetWidth) / 2,
+      behavior: reduced ? 'auto' : 'smooth',
+    });
+  }, [view.index, view.shot, reduced]);
+
+  // A control that had focus can unmount on a project change (e.g. thumbnails).
   // Keep focus in the dialog so keyboard navigation carries on working.
   useEffect(() => {
     const dlg = dlgRef.current;
@@ -185,38 +199,45 @@ export default function ProjectShowcase({ projects, startIndex, reduced, onClose
           </div>
         </header>
 
-        <div className="sc-stage">
-          <img
-            key={`${project.id}-${view.shot}`}
-            className="sc-shot"
-            style={{ '--dir': view.dir }}
-            src={shots[view.shot]}
-            width={shots[view.shot] === project.image ? project.imageSize?.[0] : undefined}
-            height={shots[view.shot] === project.image ? project.imageSize?.[1] : undefined}
-            alt={`${project.title} screenshot${shots.length > 1 ? ` ${view.shot + 1} of ${shots.length}` : ''}`}
-            decoding="async"
-          />
-          {shots.length > 1 && (
-            <>
-              <button type="button" className="sc-btn sc-shot-nav sc-shot-nav--prev" onClick={() => goShot(-1)} aria-label="Previous image">
-                <Chevron dir={-1} />
-              </button>
-              <button type="button" className="sc-btn sc-shot-nav sc-shot-nav--next" onClick={() => goShot(1)} aria-label="Next image">
-                <Chevron dir={1} />
-              </button>
-              <div className="sc-dots" role="group" aria-label="Choose image">
-                {shots.map((s, k) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className="sc-dot"
-                    aria-label={`Image ${k + 1} of ${shots.length}`}
-                    aria-current={k === view.shot ? 'true' : undefined}
-                    onClick={() => setView((v) => ({ ...v, shot: k, dir: Math.sign(k - v.shot), moved: true }))}
-                  />
-                ))}
-              </div>
-            </>
+        <div className={`sc-stage${gallery ? ' sc-stage--gallery' : ''}`}>
+          <div className="sc-frame">
+            <img
+              key={`${project.id}-${view.shot}`}
+              className="sc-shot"
+              style={{ '--dir': view.dir }}
+              src={shots[view.shot]}
+              width={shots[view.shot] === project.image ? project.imageSize?.[0] : undefined}
+              height={shots[view.shot] === project.image ? project.imageSize?.[1] : undefined}
+              alt={`${project.title} screenshot${gallery ? ` ${view.shot + 1} of ${shots.length}` : ''}`}
+              decoding="async"
+              draggable={false}
+            />
+            {gallery && (
+              <>
+                <button type="button" className="sc-btn sc-shot-nav sc-shot-nav--prev" onClick={() => goShot(-1)} aria-label="Previous image">
+                  <Chevron dir={-1} />
+                </button>
+                <button type="button" className="sc-btn sc-shot-nav sc-shot-nav--next" onClick={() => goShot(1)} aria-label="Next image">
+                  <Chevron dir={1} />
+                </button>
+              </>
+            )}
+          </div>
+          {gallery && (
+            <div className="sc-thumbs" ref={thumbsRef} role="group" aria-label="Choose image">
+              {shots.map((s, k) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="sc-thumb"
+                  aria-label={`Image ${k + 1} of ${shots.length}`}
+                  aria-current={k === view.shot ? 'true' : undefined}
+                  onClick={() => setView((v) => ({ ...v, shot: k, dir: Math.sign(k - v.shot), moved: true }))}
+                >
+                  <img src={s} alt="" decoding="async" draggable={false} />
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
