@@ -1,6 +1,12 @@
-<img src="public/avatar/rith-avatar-preview.webp" alt="The 3D avatar that lives in the portfolio" width="110" align="right">
+<p align="center">
+  <img src="public/avatar/rith-avatar-preview.webp" alt="The 3D avatar that lives in the portfolio" width="88">
+</p>
 
-# Rith Seyhak
+<h1 align="center">Rith Seyhak</h1>
+
+<p align="center"><em>Builds clean web apps, mobile apps and game worlds.</em></p>
+
+<br>
 
 I'm a Computer Science student at the Cambodia Academy of Digital Technology, based in Phnom Penh, Cambodia. I like the space where development and design meet: full-stack web development, mobile apps, UI/UX design, and the problem solving that holds them together.
 
