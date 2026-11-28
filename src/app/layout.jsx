@@ -1,4 +1,5 @@
 import './globals.css';
+import { Analytics } from '@vercel/analytics/next';
 import { SiteLoader } from '../components/loader/SiteLoader';
 import { FONT_STYLESHEET } from '../components/loader/loader.config';
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }) {
       <body>
         <SiteLoader />
         {children}
+        <Analytics />
       </body>
     </html>
   );
