@@ -89,8 +89,9 @@ export function Hero({ onOpenCmdK }) {
 
           <div className="hero-details">
             <p className="hero-lede">
-              <strong>Software engineer</strong> in Phnom Penh, Cambodia — currently studying CS at CADT.
-              I spend my evenings turning ideas into code, from POS systems to tower-defense games.
+              <strong>Software engineer</strong> based in Phnom Penh, Cambodia, currently studying Computer
+              Science at CADT. I enjoy turning ideas into thoughtful digital experiences, from practical
+              POS systems to interactive <span className="whitespace-nowrap">tower-defense</span> games.
             </p>
 
             <div className="hero-actions">

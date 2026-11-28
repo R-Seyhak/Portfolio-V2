@@ -10,13 +10,16 @@ export const LOADER_WEIGHTS = {
 export type LoaderTask = keyof typeof LOADER_WEIGHTS;
 
 export const FONT_STYLESHEET =
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&display=swap';
+  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:wght@400;500;600&display=swap';
 
 export const LOADER_CONFIG = {
   weights: LOADER_WEIGHTS,
   fontHref: FONT_STYLESHEET,
-  /** The Hero's typefaces. The reveal waits for these, up to fontTimeoutMs. */
-  fontFaces: ['400 72px Fraunces', 'italic 400 72px Fraunces', '400 18px Inter', '500 18px Inter'],
+  /** The first screen's typefaces. The reveal waits for these, up to fontTimeoutMs. */
+  fontFaces: [
+    '400 72px Fraunces', 'italic 400 72px Fraunces',
+    '400 17px "DM Sans"', '500 17px "DM Sans"', '600 17px "DM Sans"',
+  ],
   fontTimeoutMs: 3000,
   /** Shows the loader's text in the fallback serif if the web font is slow. */
   typeDelayMs: 450,

@@ -19,9 +19,10 @@ module.exports = {
         'ember-soft': 'var(--c-ember-soft)',
       },
       fontFamily: {
-        sans:    ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Both stacks are defined once, in globals.css (:root).
+        sans:    ['var(--font-sans)'],
         mono:    ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-        display: ['"Fraunces"', '"Inter"', 'serif'],
+        display: ['var(--font-display)'],
       },
       borderRadius: {
         design:    'var(--radius)',

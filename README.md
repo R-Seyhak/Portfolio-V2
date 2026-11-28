@@ -20,7 +20,7 @@ I treated it as a design project as much as a development one. I wanted a site t
 
 ## Design
 
-The look is minimal and editorial, closer to a well-set printed page than a typical developer site. Warm cream and off-white backgrounds, Fraunces serif headings over Inter body text, one restrained blue accent, and plenty of whitespace. Motion stays quiet: sections reveal and settle, then get out of the way. I aimed for something thoughtful and welcoming, with enough personality to be remembered.
+The look is minimal and editorial, closer to a well-set printed page than a typical developer site. Warm cream and off-white backgrounds, Fraunces serif headings over DM Sans body text, one restrained blue accent, and plenty of whitespace. Motion stays quiet: sections reveal and settle, then get out of the way. I aimed for something thoughtful and welcoming, with enough personality to be remembered.
 
 ## Things to try
 

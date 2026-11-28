@@ -45,7 +45,7 @@ const STYLES = `
 .sl-meta {
   display: flex; justify-content: space-between; gap: 16px;
   margin: 12px 0 0;
-  font: 400 12.5px/1.4 "Inter", ui-sans-serif, system-ui, sans-serif;
+  font: 400 12.5px/1.4 "DM Sans", ui-sans-serif, system-ui, sans-serif;
   color: var(--sl-ink-2);
 }
 .sl-pct { font-variant-numeric: tabular-nums; }

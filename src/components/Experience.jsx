@@ -37,7 +37,7 @@ export function Experience() {
                 <div className="timeline-body">
                   <h4 className="font-display text-[24px] font-medium tracking-[-0.02em] leading-[1.2]">{e.role}</h4>
                   <div className="mt-1.5 text-[14px] text-ink-3"><span className="font-medium text-ink-2">{e.org}</span> · {e.location}</div>
-                  <p className="mt-3.5 text-[15px] text-ink-2 leading-relaxed max-w-[620px]">{e.description}</p>
+                  <p className="mt-3.5 text-[15px] text-ink-2 leading-relaxed max-w-[620px] text-pretty">{e.description}</p>
                   {e.highlights && (
                     <ul className="mt-3 list-none p-0">
                       {e.highlights.map((h) => (

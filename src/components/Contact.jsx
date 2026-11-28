@@ -105,7 +105,7 @@ export function Contact() {
 
         <div className="contact-grid reveal" ref={ref}>
           <div>
-            <p className="text-[17px] leading-relaxed text-ink-2">
+            <p className="text-[17px] leading-relaxed text-ink-2 text-pretty">
               I'm always open to new opportunities, collaborations, or just a chat about design and engineering.
               Reach me via the form — or skip it and email me directly.
             </p>
@@ -206,7 +206,7 @@ export function Contact() {
           <div className="footer-grid">
             <div>
               <div className="font-display text-[32px] font-medium tracking-[-0.02em]">Rith Seyhak.</div>
-              <p className="mt-2.5 text-ink-2 text-[14px] leading-relaxed max-w-[320px]">
+              <p className="mt-2.5 text-ink-2 text-[14px] leading-relaxed max-w-[320px] text-pretty">
                 Aspiring software engineer based in Phnom Penh, Cambodia. Building clean, modern web &amp; mobile applications.
               </p>
             </div>

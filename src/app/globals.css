@@ -6,6 +6,11 @@
    DESIGN TOKENS
    ========================================================= */
 :root {
+  /* Type: Fraunces is the display and editorial voice (headings, italic
+     labels, numerals); DM Sans carries reading and interface text. Its round,
+     low-contrast forms sit close to Fraunces's soft curves. */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --hue-accent: 250;
   --hue-ember: 40;
   --c-accent:      oklch(62% 0.18 var(--hue-accent));
@@ -76,12 +81,11 @@
 @layer base {
   html { scroll-behavior: smooth; }
   body {
-    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-sans);
     background: var(--c-bg);
     color: var(--c-ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "ss01", "cv11";
     overflow-x: hidden;
     position: relative;   /* the 3D layer spans the whole document */
     transition: background 0.4s ease, color 0.4s ease;
@@ -91,6 +95,9 @@
   a { color: inherit; text-decoration: none; }
   input, textarea { font: inherit; color: inherit; }
   h1, h2, h3 { letter-spacing: -0.02em; line-height: 1.05; }
+  /* DM Sans reading text: re-break the last lines so a paragraph doesn't end on
+     one short word. Fraunces display text keeps its own line breaks. */
+  .ab-text p, .pj-summary, .pj-did, .sc-text, .kc-info-text { text-wrap: pretty; }
 }
 
 /* =========================================================
@@ -457,7 +464,7 @@
   --ndl: calc((1 - var(--ad)) * 170ms);
   position: absolute; inset: 0;
   display: grid; place-items: center;
-  font: italic 500 12px/1 "Fraunces", "Inter", serif;
+  font: italic 500 12px/1 var(--font-display);
   letter-spacing: 0;
   opacity: calc(1 - var(--ad));
   transform: translateY(calc(var(--d) * 105%)) scale(calc(1 - .3 * var(--ad)));
@@ -570,14 +577,14 @@
 /* ---------- Info typography ---------- */
 .pj-label {
   display: flex; align-items: center; gap: 10px;
-  font: italic 400 14.5px/1.4 "Fraunces", "Inter", serif;
+  font: italic 400 14.5px/1.4 var(--font-display);
   letter-spacing: -0.005em;
   color: var(--c-ink-3);
 }
 .pj-label-rule { width: 22px; height: 1px; background: var(--c-line-2); flex-shrink: 0; }
 .pj-title {
   margin-top: 12px;
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-weight: 500;
   font-size: clamp(30px, 3.4vw, 58px);
   line-height: 1;
@@ -591,7 +598,7 @@
   display: flex; flex-wrap: wrap; align-items: baseline;
   column-gap: 10px; row-gap: 4px;
   margin-top: 12px;
-  font: italic 400 15.5px/1.4 "Fraunces", "Inter", serif;
+  font: italic 400 15.5px/1.4 var(--font-display);
   letter-spacing: -0.005em;
   color: var(--c-accent-ink);
 }
@@ -706,7 +713,7 @@
   max-width: 1680px;
   padding: 0 var(--pj-pad-r) 0 var(--pj-pad-l);
   display: none; justify-content: space-between; align-items: center;
-  font: italic 400 14px/1 "Fraunces", "Inter", serif;
+  font: italic 400 14px/1 var(--font-display);
   color: var(--c-ink-3);
   pointer-events: none;
 }
@@ -833,13 +840,13 @@
 .sc-head { min-width: 0; }
 .sc-kicker {
   display: flex; align-items: center; gap: 10px;
-  font: italic 400 14px/1.3 "Fraunces", "Inter", serif;
+  font: italic 400 14px/1.3 var(--font-display);
   color: var(--c-ink-2);
   white-space: nowrap;
 }
 .sc-title {
   margin-top: 3px;
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-weight: 500;
   font-size: clamp(18px, 1.8vw, 25px);
   line-height: 1.15;
@@ -862,7 +869,7 @@
   display: inline-flex; align-items: center; gap: 9px;
   min-height: 40px;
   padding: 0 2px 0 6px;
-  font: italic 400 15px/1 "Fraunces", "Inter", serif;
+  font: italic 400 15px/1 var(--font-display);
   color: var(--c-ink);
   transition: color .2s ease;
 }
@@ -870,7 +877,7 @@
   padding: 3px 5px;
   border: 1px solid var(--c-line-2);
   border-radius: 4px;
-  font: italic 400 12.5px/1 "Fraunces", "Inter", serif;
+  font: italic 400 12.5px/1 var(--font-display);
   color: var(--c-ink-2);
 }
 .sc-close-icon { display: none; }
@@ -999,13 +1006,13 @@
 .sc-label {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 12px;
-  font: italic 400 15px/1.3 "Fraunces", "Inter", serif;
+  font: italic 400 15px/1.3 var(--font-display);
   letter-spacing: -0.005em;
   color: var(--c-ink-2);
 }
 .sc-label::after { content: ""; flex: 1; height: 1px; background: var(--c-line); }
 .sc-lead {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-size: clamp(21px, 2.1vw, 28px);
   line-height: 1.32;
   letter-spacing: -0.015em;
@@ -1031,7 +1038,7 @@
   padding: 11px 0;
   border-bottom: 1px solid var(--c-line);
 }
-.sc-facts dt { font: italic 400 14px/1.4 "Fraunces", "Inter", serif; color: var(--c-ink-2); }
+.sc-facts dt { font: italic 400 14px/1.4 var(--font-display); color: var(--c-ink-2); }
 .sc-facts dd { margin: 0; font-size: 14.5px; line-height: 1.45; color: var(--c-ink); }
 .sc-tech { display: flex; flex-wrap: wrap; gap: 6px; }
 .sc-links { display: flex; flex-wrap: wrap; gap: 14px 22px; }
@@ -1048,11 +1055,11 @@
   text-align: left;
   transition: background-color .3s ease;
 }
-.sc-next-label { grid-column: 1; font: italic 400 14px/1.3 "Fraunces", "Inter", serif; color: var(--c-ink-2); }
+.sc-next-label { grid-column: 1; font: italic 400 14px/1.3 var(--font-display); color: var(--c-ink-2); }
 .sc-next-title {
   grid-column: 1;
   margin-top: 4px;
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-size: clamp(22px, 2.6vw, 36px);
   line-height: 1.1;
   letter-spacing: -0.025em;
@@ -1152,7 +1159,7 @@
   border-bottom-color: color-mix(in oklch, var(--c-line) 70%, transparent);
 }
 .site-name {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-weight: 500;
   font-size: 19px;
   letter-spacing: -0.015em;
@@ -1166,7 +1173,7 @@
 .site-status,
 .site-jump,
 .site-menu {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 400;
   font-size: 15.5px;
@@ -1200,7 +1207,7 @@
 .site-jump { display: none; align-items: center; gap: 8px; transition: color .2s ease; }
 .site-jump:hover { color: var(--c-ink); }
 .site-jump kbd {
-  font: italic 400 12.5px/1 "Fraunces", "Inter", serif;
+  font: italic 400 12.5px/1 var(--font-display);
   padding: 3px 5px;
   border: 1px solid var(--c-line);
   border-radius: 4px;
@@ -1268,11 +1275,11 @@
 .mnav[data-open] .mnav-list a { opacity: 1; transform: none; }
 .mnav-list a[aria-current] { color: var(--c-accent); }
 .mnav-num {
-  font: italic 400 14px/1 "Fraunces", "Inter", serif;
+  font: italic 400 14px/1 var(--font-display);
   color: var(--c-ink-3);
 }
 .mnav-label {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-size: clamp(32px, 9vw, 46px);
   line-height: 1.05;
   letter-spacing: -0.025em;
@@ -1336,7 +1343,7 @@
   border: 1px solid var(--c-line);
   border-radius: 6px;
   background: var(--c-bg);
-  font: italic 400 14px/1 "Fraunces", "Inter", serif;
+  font: italic 400 14px/1 var(--font-display);
   color: var(--c-ink);
   white-space: nowrap;
   pointer-events: none;
@@ -1352,13 +1359,13 @@
    HERO — one typographic voice, three roles
      display   Fraunces at its display optical size (opsz 144): high
                stroke contrast; the italic carries the emphasis
-     body      Inter, one family, weight for emphasis
+     body      DM Sans for the lede, buttons and links; weight for emphasis
      labels    Fraunces italic at text size, sentence case: the status
                line, stat labels, the index number
    ========================================================= */
 .hero {
-  --hero-display: "Fraunces", "Inter", serif;
-  --hero-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --hero-display: var(--font-display);
+  --hero-body: var(--font-sans);
   --hero-size: clamp(40px, 5.5vw, 76px);
   --hero-ease: cubic-bezier(.2,.8,.2,1);
 }
@@ -1438,12 +1445,18 @@
   margin-top: 28px;
   max-width: 540px;
   font-family: var(--hero-body);
-  font-size: clamp(17px, 1.4vw, 19px);
-  line-height: 1.65;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
   color: var(--c-ink-2);
   text-wrap: pretty;
 }
-.hero-lede strong { font-weight: 500; color: var(--c-ink); }
+/* A small step up in weight and tone, so the opening reads as part of the sentence */
+.hero-lede strong {
+  font-weight: 500;
+  color: color-mix(in oklch, var(--c-ink) 55%, var(--c-ink-2));
+}
 
 /* Statistics: a ruled strip, serif values over mono labels */
 .hero-stats {
@@ -1565,7 +1578,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   .hero-intro { grid-column: 1; grid-row: 1; align-self: end; }
   .hero-details { grid-column: 1; grid-row: 2; }
   .hero-rotator { display: grid; justify-content: start; }
-  .hero-lede { margin-top: 24px; }
+  .hero-lede { margin-top: 24px; font-size: 17px; }
   .hero-stat { padding: 0 clamp(14px, 1.7vw, 28px); }
   .hero-stat dd { font-size: clamp(23px, 2.1vw, 31px); }
 }
@@ -1760,7 +1773,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 }
 .ab-head {
   display: flex; align-items: center; gap: 16px;
-  font: italic 400 15px/1 "Fraunces", "Inter", serif;
+  font: italic 400 15px/1 var(--font-display);
   color: var(--c-ink-3);
 }
 .ab-rule {
@@ -1775,7 +1788,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 
 .ab-title {
   margin-top: 36px;
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(42px, 6.2vw, 88px);
   line-height: 1;
@@ -1881,11 +1894,11 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 .ab-caption {
   display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; column-gap: 12px; row-gap: 4px;
   margin-top: calc(18px + var(--ab-off));
-  font: italic 400 13.5px/1.5 "Fraunces", "Inter", serif;
+  font: italic 400 13.5px/1.5 var(--font-display);
   color: var(--c-ink-3);
 }
 .ab-caption b {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-style: italic;
   font-weight: 400;
   font-size: 15px;
@@ -1908,7 +1921,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
     display: block;
     position: absolute; top: 0; left: calc(100% + var(--ab-off) + 12px);
     writing-mode: vertical-rl;
-    font: italic 400 12.5px/1 "Fraunces", "Inter", serif;
+    font: italic 400 12.5px/1 var(--font-display);
     letter-spacing: 0.02em;
     color: var(--c-ink-3);
   }
@@ -1916,7 +1929,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 
 /* Copy */
 .ab-stand {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(21px, 1.9vw, 27px);
   line-height: 1.36;
@@ -1928,7 +1941,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 .ab-text p + p { margin-top: 16px; }
 .ab-text b { color: var(--c-ink); font-weight: 600; }
 .ab-tech {
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-style: italic;
   font-size: 1.06em;
   letter-spacing: -0.005em;
@@ -1956,7 +1969,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 }
 .ab-row:hover::after { transform: none; }
 .ab-row dt {
-  font: italic 400 14px/1.4 "Fraunces", "Inter", serif;
+  font: italic 400 14px/1.4 var(--font-display);
   color: var(--c-ink-3);
 }
 .ab-row dd { margin: 0; font-size: 15px; line-height: 1.5; color: var(--c-ink); }
@@ -1972,14 +1985,14 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 /* Interests: editorial keywords */
 .ab-kicker {
   display: flex; gap: 8px;
-  font: italic 400 15px/1 "Fraunces", "Inter", serif;
+  font: italic 400 15px/1 var(--font-display);
   color: var(--c-ink-3);
 }
 .ab-kw { list-style: none; margin: 18px 0 0; padding: 0; }
 .ab-kw li {
   display: flex; align-items: flex-start; gap: 12px;
   padding: 5px 0;
-  font-family: "Fraunces", "Inter", serif;
+  font-family: var(--font-display);
   font-size: clamp(22px, 2.1vw, 30px);
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -1990,7 +2003,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   flex-shrink: 0;
   min-width: 18px;
   margin-top: .3em;
-  font: italic 500 13px/1 "Fraunces", "Inter", serif;
+  font: italic 500 13px/1 var(--font-display);
   color: var(--c-accent);
 }
 .ab-kw-t {
@@ -2117,7 +2130,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   border: 1px solid var(--c-line);
   border-radius: 10px;
   background: var(--c-bg-2);
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   outline: none;
   resize: vertical;
@@ -2269,7 +2282,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   width: max-content;
   max-width: 150px;
   margin: 0;
-  font: italic 400 14px/1.3 "Fraunces", "Inter", serif;
+  font: italic 400 14px/1.3 var(--font-display);
   color: var(--c-ink-2);
   text-align: right;
   opacity: 0;
@@ -2322,7 +2335,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 
 .kc-group {
   position: absolute; left: 0; top: 0;
-  font: italic 400 13.5px/1 "Fraunces", "Inter", serif;
+  font: italic 400 13.5px/1 var(--font-display);
   color: var(--c-ink-3);
   white-space: nowrap;
   pointer-events: none;
@@ -2390,7 +2403,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   left: 0;
   top: calc(var(--kc-r) * 1.08 + 4px);
   translate: -50% 0;
-  font: italic 400 12px/1.15 "Fraunces", "Inter", serif;
+  font: italic 400 12px/1.15 var(--font-display);
   color: var(--c-ink-3);
   white-space: nowrap;
   /* A sliver of paper behind the name, so a line passing under it never hurts legibility. */
@@ -2434,7 +2447,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   border-top: 1px solid var(--c-line);
 }
 .kc-info-hint {
-  font: italic 400 15px/1.4 "Fraunces", "Inter", serif;
+  font: italic 400 15px/1.4 var(--font-display);
   color: var(--c-ink-3);
   text-align: center;
   padding-top: 18px;
@@ -2459,10 +2472,10 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   border: 1px solid var(--c-line-2);
 }
 .kc-info-logo > * { width: 58% !important; height: 58% !important; }
-.kc-info-group { font: italic 400 13.5px/1.2 "Fraunces", "Inter", serif; color: var(--c-ink-3); }
+.kc-info-group { font: italic 400 13.5px/1.2 var(--font-display); color: var(--c-ink-3); }
 .kc-info-name {
   margin-top: 3px;
-  font: 500 clamp(25px, 2.5vw, 32px)/1.05 "Fraunces", "Inter", serif;
+  font: 500 clamp(25px, 2.5vw, 32px)/1.05 var(--font-display);
   letter-spacing: -.02em;
   color: var(--c-ink);
 }
@@ -2476,7 +2489,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   color: var(--c-ink-2);
 }
 .kc-info-meta > span:first-child {
-  font: italic 400 13.5px/1.5 "Fraunces", "Inter", serif;
+  font: italic 400 13.5px/1.5 var(--font-display);
   color: var(--c-ink-3);
   margin-right: 4px;
 }
@@ -2494,7 +2507,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
 .kc-list summary {
   display: inline-block;
   padding: 6px 2px;
-  font: italic 400 13.5px/1.3 "Fraunces", "Inter", serif;
+  font: italic 400 13.5px/1.3 var(--font-display);
   color: var(--c-ink-3);
   border-bottom: 1px solid var(--c-line-2);
   cursor: pointer;
@@ -2510,7 +2523,7 @@ html[data-site-loading] :is(.scene-canvas, .av-fallback) { transition: none; }
   margin-top: 22px;
   text-align: left;
 }
-.kc-list-title { font: italic 400 14px/1.3 "Fraunces", "Inter", serif; color: var(--c-ink-2); margin-bottom: 6px; }
+.kc-list-title { font: italic 400 14px/1.3 var(--font-display); color: var(--c-ink-2); margin-bottom: 6px; }
 .kc-list-title span { color: var(--c-ink-3); }
 .kc-list ul { list-style: none; margin: 0; padding: 0; }
 .kc-list li button { padding: 3px 0; font-size: 13.5px; color: var(--c-ink-2); text-align: left; transition: color .2s ease; }
